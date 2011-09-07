@@ -36,23 +36,23 @@ class __email extends xmd {
 			FROM _email
 			WHERE email_active = 1
 			LIMIT 1';
-		if (!$email = $this->_fieldrow($sql)) {
+		if (!$email = sql_fieldrow($sql)) {
 			$this->e('No queue emails.');
 		}
 		
 		set_time_limit(0);
 		
 		if (!$email['email_start']) {
-			$sql = 'UPDATE _email SET email_start = ' . (int) time() . '
-				WHERE email_id = ' . (int) $email['email_id'];
-			$this->_sql($sql);
+			$sql = 'UPDATE _email SET email_start = ?
+				WHERE email_id = ?';
+			sql_query(sql_filter($sql, time(), $email['email_id']));
 		}
 		
 		$sql = 'SELECT *
-			FROM ' . EMAIL_TABLE . '
+			FROM ??
 			ORDER BY address_id
-			LIMIT ' . (int) $email['email_last'] . ', 200';
-		$members = $this->_rowset($sql);
+			LIMIT ??, ??';
+		$members = sql_rowset(sql_filter($sql, TABLE, $email['email_last'], $email['email_batch']));
 		
 		$i = 0;
 		foreach ($members as $row) {
@@ -68,7 +68,7 @@ class __email extends xmd {
 			$emailer->use_template('mass');
 			
 			$emailer->format('html');
-			$emailer->from('CLARO TRAE UNA SORPRESA <clientes@claro.com.sv>');
+			$emailer->from($email['email_from'] . ' <' . $email['email_from_address'] . '>');
 			$emailer->set_subject(entity_decode($email['email_subject']));
 			$emailer->email_address(trim($row['address_account']));
 			
@@ -124,30 +124,26 @@ class __email extends xmd {
 			$emailer->send();
 			$emailer->reset();
 			
-			fwrite_line('./mass.txt', $row['address_name'] . ' . ' . $row['address_account']);
-			
-			sleep(2);
+			$sql = 'UPDATE ?? SET address_sent = ?
+				WHERE address_id = ?';
+			sql_query(sql_filter($sql, $email['email_data'], time(), $row['address_sent']));
 			
 			$i++;
+			
+			$sql = 'UPDATE _email SET email_last = ?
+				WHERE email_id = ?';
+			sql_query(sql_filter($sql, $i, $email['email_id']));
+			
+			sleep(2);
 		}
 		
-		if ($i) {
-			$email['email_last'] += $i;
-			
-			$sql = 'UPDATE _email SET email_last = ' . $email['email_last'] . '
-				WHERE email_id = ' . (int) $email['email_id'];
-			$this->_sql($sql);
-		} else {
-			$sql = 'UPDATE _email SET email_active = 0, email_end = ' . (int) time() . '
-				WHERE email_id = ' . (int) $email['email_id'];
-			$this->_sql($sql);
-			
-			$this->e('Finished processing [' . $email['email_id'] . '] emails.');
+		if ($i == count($members)) {
+			$sql = 'UPDATE _email SET email_active = 0, email_end = ?
+				WHERE email_id = ?';
+			sql_query(sql_filter($sql, time(), $email['email_id']));
 		}
 		
-		$this->e('Processed ' . $i . ' emails.');
-		
-		return;
+		return $this->e('Processed ' . $i . ' emails.');
 	}
 	
 	function valid() {
@@ -183,15 +179,15 @@ class __email extends xmd {
 			FROM _email
 			WHERE email_active = 1
 			LIMIT 1';
-		if (!$email = $this->_fieldrow($sql)) {
+		if (!$email = sql_fieldrow($sql)) {
 			$this->e('No queue emails.');
 		}
 		
 		$sql = 'SELECT *
 			FROM ' . EMAIL_TABLE . '
 			ORDER BY address_id
-			LIMIT ' . (int) $email['email_last'] . ', 200';
-		$members = $this->_rowset($sql);
+			LIMIT ??, ??';
+		$members = sql_rowset(sql_filter($sql, $email['email_last'], $email['email_batch']));
 		
 		$i = 0;
 		foreach ($members as $row) {
@@ -229,8 +225,8 @@ class __email extends xmd {
 		
 		$sql = 'SELECT *
 			FROM _email
-			WHERE email_id = ' . (int) $v['id'];
-		if (!$email = $this->_fieldrow($sql)) {
+			WHERE email_id = ?';
+		if (!$email = sql_fieldrow(sql_filter($sql, $v['id']))) {
 			$this->e('El registro de email no existe.');
 		}
 		
@@ -255,24 +251,24 @@ class __email extends xmd {
 		if (_button()) {
 			$v = $this->__(array('subject', 'message', 'lastvisit' => 0));
 			
-			$sql = "SELECT email_id
+			$sql = 'SELECT email_id
 				FROM _email
-				WHERE email_subject = '" . $this->_escape($v['subject']) . "'
-					AND email_message = '" . $this->_escape($v['message']) . "'";
-			if ($this->_fieldrow($sql)) {
+				WHERE email_subject = ?
+					AND email_message = ?';
+			if (sql_fieldrow(sql_filter($sql, $v['subject'], $v['subject']))) {
 				$this->e('El email ya esta programado para envio, no se puede duplicar.');
 			}
 			
 			$v['active'] = 1;
 			$v['message'] = str_replace(array('&lt;', '&gt;', '&quot;'), array('<', '>', '"'), $v['message']);
 			
-			$sql = 'INSERT INTO _email' . $this->_build_array('INSERT', ksql('email', $v));
-			$this->_sql($sql);
+			$sql = 'INSERT INTO _email' . sql_build('INSERT', prefix('email', $v));
+			sql_query($sql);
 			
 			$this->e('El mensaje fue programado para envio de email.');
 		}
 		
-		$tables = $this->_rowset('SHOW TABLES');
+		$tables = sql_rowset('SHOW TABLES', false, false, false, MYSQL_NUM);
 		
 		$i = 0;
 		foreach ($tables as $table) {
@@ -311,8 +307,8 @@ class __email extends xmd {
 		
 		$sql = 'SELECT *
 			FROM _email
-			WHERE email_id = ' . (int) $v['id'];
-		if (!$email = $this->_fieldrow($sql)) {
+			WHERE email_id = ?';
+		if (!$email = sql_fieldrow(sql_filter($sql, $v['id']))) {
 			$this->e('El registro de email no existe.');
 		}
 		
@@ -322,9 +318,9 @@ class __email extends xmd {
 			$vs = explode(' ', $v['lastvisit']);
 			$v['lastvisit'] = mktime(0, 0, 0, $vs[1], $vs[0], $vs[2]);
 			
-			$sql = 'UPDATE _email SET ' . $this->_build_array('UPDATE', ksql('email', $v)) . '
-				WHERE email_id = ' . (int) $v['id'];
-			$this->_sql($sql);
+			$sql = 'UPDATE _email SET ??
+				WHERE email_id = ?';
+			sql_query(sql_filter($sql, sql_build('UPDATE', ksql('email', $v)), $v['id']));
 			
 			$this->e('El mensaje programado fue actualizado.');
 		}
@@ -352,13 +348,13 @@ class __email extends xmd {
 			$sql = 'SELECT *
 				FROM _email
 				WHERE email_id = ' . (int) $v['id'];
-			if (!$email = $this->_fieldrow($sql)) {
+			if (!$email = sql_fieldrow($sql)) {
 				$this->e('El registro de email no existe.');
 			}
 			
 			$sql = 'UPDATE _email SET email_active = 1, email_start = 0, email_end = 0, email_last = 0
-				WHERE email_id = ' . (int) $v['id'];
-			$this->_sql($sql);
+				WHERE email_id = ?';
+			sql_query(sql_filter($sql, $v['id']));
 			
 			$this->e('El registro de email fue reiniciado.');
 		}
@@ -366,7 +362,7 @@ class __email extends xmd {
 		$sql = 'SELECT email_id, email_subject
 			FROM _email
 			ORDER BY email_id';
-		$emails = $this->_rowset($sql);
+		$emails = sql_rowset($sql);
 		
 		$response = '';
 		foreach ($emails as $row) {
@@ -402,18 +398,18 @@ class __email extends xmd {
 		
 		$sql = 'SELECT *
 			FROM _email
-			WHERE email_id = ' . (int) $v['id'];
-		if (!$email = $this->_fieldrow($sql)) {
+			WHERE email_id = ?';
+		if (!$email = sql_fieldrow(sql_filter($sql, $v['id']))) {
 			$this->e('El registro de email no existe.');
 		}
 		
 		$sql = 'SELECT COUNT(address_id) AS total
-			FROM _' . EMAIL_TABLE;
-		$total = $this->_field($sql, 'total');
+			FROM _email_' . $email['email_data'];
+		$total = sql_field($sql, 'total', 0);
 		
 		$sql = 'SELECT COUNT(address_id) AS total
 			FROM _email_address';
-		$all = $this->_field($sql, 'total');
+		$all = sql_field($sql, 'total', 0);
 		
 		$this->e($total . ' . ' . $all);
 	}

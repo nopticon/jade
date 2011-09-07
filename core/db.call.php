@@ -48,7 +48,17 @@ function sql_filter() {
 		$args = $args[0];
 	}
 	
-	$args = array_map('sql_escape', $args);
+	$_args = array();
+	foreach ($args as $i => $arg) {
+		if (strpos($arg, '/***/') !== false) {
+			$_args[$i] = $arg;
+		} else {
+			$_args[$i] = sql_escape($arg);
+		}
+	}
+	$args = $_args;
+	
+	//$args = array_map('sql_escape', $args);
 	
 	foreach ($args as $i => $row) {
 		if (strpos($row, 'addquotes') !== false) {

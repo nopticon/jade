@@ -36,28 +36,6 @@ class __ext extends xmd {
 		
 		switch ($v['e']) {
 			case 'css':
-				if ($v['f'] != 'default') {
-					$v['field'] = 'alias';
-					if (preg_match('#^\d+$#is', $v['f'])) {
-						$v['field'] = 'id';
-					}
-					
-					$sql = 'SELECT *
-						FROM _tree
-						WHERE tree_' . $this->_escape($v['field']) . " = '" . $this->_escape($v['f']) . "'
-						LIMIT 1";
-					if (!$tree = $this->_fieldrow($sql)) {
-						_fatal();
-					}
-					
-					$v['f'] = '_tree_' . $this->alias_id($tree);
-					if (!@file_exists($filepath . _filename($v['f'], $v['e']))) {
-						_fatal();
-					}
-					$browser[$this->alias_id($tree)] = true;
-					$filename = _filename($v['f'], $v['e']);
-				}
-				
 				$sv['CSSPATH'] = LIBD . 'style';
 				
 				foreach ($browser as $css_k => $css_v) {
@@ -115,7 +93,7 @@ class __ext extends xmd {
 			$style->replace_vars = false;
 		}
 		
-		$this->sql_close();
+		sql_close();
 		$style->set_filenames(array('body' => $v['e'] . '/' . $filename));
 		$style->assign_var_from_handle('EXT', 'body');
 		

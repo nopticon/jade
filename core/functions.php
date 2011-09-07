@@ -155,6 +155,18 @@ function hook($name, $args = array(), $arr = false)
 	return $f($name, $args);
 }
 
+function _pre($a, $d = false)
+{
+	echo '<pre>';
+	print_r($a);
+	echo '</pre>';
+	
+	if ($d === true)
+	{
+		exit;
+	}
+}
+
 function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno = 0)
 {
 	sql_close();
@@ -1031,7 +1043,7 @@ function _layout($filename, $pagetitle = false, $v_custom = false)
 	$style->set_filenames(array(
 		'body' => $filename)
 	);
-	report();
+	//sql_report();
 	
 	$mtime = explode(' ', microtime());
 	$v_assign['F_TIME'] = sprintf('%.2f', ($mtime[0] + $mtime[1] - $starttime));
