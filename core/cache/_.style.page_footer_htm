@@ -1,0 +1,11 @@
+<?php
+
+// Generated on Fri, 30 Jan 2009 06:07:47 -0800 (time=1233324467)
+
+?></div>
+
+<script src="<?php echo isset($this->vars['S_SERVER']) ? $this->vars['S_SERVER'] : $this->lang('S_SERVER'); ?>nijad/ext/jquery.js" type="text/javascript"></script>
+<script src="<?php echo isset($this->vars['S_SERVER']) ? $this->vars['S_SERVER'] : $this->lang('S_SERVER'); ?>nijad/space/wymeditor/jquery.wymeditor.js" type="text/javascript"></script>
+<script src="<?php echo isset($this->vars['S_SERVER']) ? $this->vars['S_SERVER'] : $this->lang('S_SERVER'); ?>nijad/ext/glob.js" type="text/javascript"></script>
+</body>
+</html>

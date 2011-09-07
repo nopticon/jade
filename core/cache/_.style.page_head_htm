@@ -1,0 +1,14 @@
+<?php
+
+// Generated on Fri, 30 Jan 2009 06:07:47 -0800 (time=1233324467)
+
+?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="es" lang="es">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><?php echo isset($this->vars['SITE_TITLE']) ? $this->vars['SITE_TITLE'] : $this->lang('SITE_TITLE'); ?><?php if ($this->vars['PAGE_TITLE'] != '') {  ?>: <?php echo isset($this->vars['PAGE_TITLE']) ? $this->vars['PAGE_TITLE'] : $this->lang('PAGE_TITLE'); ?><?php } ?></title>
+<link rel="stylesheet" type="text/css" href="<?php echo isset($this->vars['S_SERVER']) ? $this->vars['S_SERVER'] : $this->lang('S_SERVER'); ?>nijad/ext/default.css" />
+<link rel="Shortcut Icon" href="<?php echo isset($this->vars['S_SERVER']) ? $this->vars['S_SERVER'] : $this->lang('S_SERVER'); ?>favicon.ico" type="image/x-icon" />
+</head>
+
+<body>

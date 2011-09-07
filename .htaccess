@@ -1,0 +1,13 @@
+RewriteEngine On
+RewriteCond %{QUERY_STRING} base64_encode.*\(.*\) [OR]
+RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{THE_REQUEST} index.php
+RewriteRule ^.*$ - [F,L]
+
+RewriteRule ^$ index.php?module=home&args= [nc]
+RewriteRule ^(ext)/([0-9a-z\_\-]+)\.(js|css)$ index.php?module=$1&args=f:$2.e:$3 [nc]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-z0-9\-\_]+)/?(([0-9a-z\_\.\-\:]+)/?)?$ index.php?module=$1&args=$3 [PT,L,QSA]

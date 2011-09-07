@@ -1,0 +1,30 @@
+<?php
+
+// Generated on Fri, 30 Jan 2009 11:59:55 -0600 (time=1233338395)
+
+?><?php $this->set_filename('xs_include_6c0c09bc885840439b92f5748a88ec2b', 'page.header.htm', true); $this->pparse('xs_include_6c0c09bc885840439b92f5748a88ec2b'); ?>
+
+<div id="mainframe">
+
+<form action="<?php echo isset($this->vars['_SELF']) ? $this->vars['_SELF'] : $this->lang('_SELF'); ?>" method="post">
+
+<div class="m_top_tiny field_area float-holder ie-widthfix">
+<label for="subject">Asunto</label>
+<input type="text" class="w8" id="subject" name="subject" value="<?php echo isset($this->vars['SUBJECT']) ? $this->vars['SUBJECT'] : $this->lang('SUBJECT'); ?>" />
+</div>
+
+<div class="m_top_tiny field_area float-holder ie-widthfix">
+<label for="subject">&Uacute;ltima visita</label>
+<input type="text" class="w8" id="lastvisit" name="lastvisit" value="<?php echo isset($this->vars['LASTVISIT']) ? $this->vars['LASTVISIT'] : $this->lang('LASTVISIT'); ?>" />
+</div>
+
+<div class="m_top_tiny field_area float-holder ie-widthfix">
+<textarea id="message" class="w0" name="message" rows="15" cols="50"><?php echo isset($this->vars['MESSAGE']) ? $this->vars['MESSAGE'] : $this->lang('MESSAGE'); ?></textarea>
+</div>
+
+<div class="m_top_mid a_center"><input type="submit" name="submit" value="Guardar cambios" /></div>
+</form>
+
+</div>
+
+<?php $this->set_filename('xs_include_72600ad8bfb442ce4c3fc53c9a14ec62', 'page.footer.htm', true); $this->pparse('xs_include_72600ad8bfb442ce4c3fc53c9a14ec62'); ?>

@@ -1,0 +1,26 @@
+<?php
+
+// Generated on Fri, 30 Jan 2009 09:35:17 -0600 (time=1233329717)
+
+?><?php $this->set_filename('xs_include_ddebf19d2e0ca38d62ac549608ac1df3', 'page.header.htm', true); $this->pparse('xs_include_ddebf19d2e0ca38d62ac549608ac1df3'); ?>
+
+<div id="mainframe">
+
+<form action="<?php echo isset($this->vars['_SELF']) ? $this->vars['_SELF'] : $this->lang('_SELF'); ?>" method="post">
+
+<div class="m_top_tiny field_area float-holder ie-widthfix">
+<label for="username">Nombre de usuario</label>
+<input type="text" class="w8" id="username" name="username" value="<?php echo isset($this->vars['USERNAME']) ? $this->vars['USERNAME'] : $this->lang('USERNAME'); ?>" />
+</div>
+
+<div class="m_top_tiny field_area float-holder ie-widthfix">
+<label for="address">Correo electronico</label>
+<input type="text" class="w8" id="address" name="address" value="<?php echo isset($this->vars['ADDRESS']) ? $this->vars['ADDRESS'] : $this->lang('ADDRESS'); ?>" />
+</div>
+
+<div class="m_top_mid a_center"><input type="submit" name="submit" value="Guardar cambios" /></div>
+</form>
+
+</div>
+
+<?php $this->set_filename('xs_include_5db343ad823417c15dca6d089d7187a5', 'page.footer.htm', true); $this->pparse('xs_include_5db343ad823417c15dca6d089d7187a5'); ?>
