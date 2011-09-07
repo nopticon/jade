@@ -1,12 +1,7 @@
 <?php
 /*
-$Id: styles.php,v 1.1.1.1 2006/08/02 16:07:31 Psychopsia Exp $
-
-<Ximod, a web development framework.>
-Copyright (C) <2009>  <Nopticon>
-
-The interface was originally inspired by PHPLib templates,
-and the template file formats are quite similar.
+<Jade, Email Server.>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1656,7 +1651,7 @@ class style
 			include('./style/' . $tpl . '/xs_config.cfg');
 			if (count($style_config))
 			{
-				global $core, $db;
+				global $core;
 				
 				for ($i = 0; $i < count($style_config); $i++)
 				{
@@ -1669,8 +1664,15 @@ class style
 				$str = $this->_serialize($this->style_config);
 				$config_name = 'xs_style_' . $tpl;
 				$core->config[$config_name] = $str;
-				$sql = "INSERT INTO _config (config_name, config_value) VALUES ('" . addslashes($config_name) . "', '" . addslashes($str) . "')";
-				$db->sql_query($sql);
+				
+				$sql_insert = array(
+					'config_name' => $config_name,
+					'config_value' => $str
+				);
+				
+				$sql = 'INSERT INTO _config' . sql_build('INSERT', $sql_insert);
+				sql_query($sql);
+				
 				return true;
 			}
 		}
@@ -1702,7 +1704,8 @@ class style
 			include('./style/' . $tpl . '/xs_config.cfg');
 			if (count($style_config))
 			{
-				global $core, $db;
+				global $core;
+				
 				for ($i = 0; $i < count($style_config); $i++)
 				{
 					if (!isset($this->style_config[$style_config[$i]['var']]))
@@ -1714,17 +1717,26 @@ class style
 						}
 					}
 				}
+				
 				$str = $this->_serialize($this->style_config);
 				$config_name = 'xs_style_' . $tpl;
+				
 				if (isset($core->config[$config_name]))
 				{
-					$sql = "UPDATE _config SET config_value='" . addslashes($str) . "' WHERE config_name='" . addslashes($config_name) . "'";
+					$sql = 'UPDATE _config SET config_value = ?
+						WHERE config_name = ?';
+					$sql = sql_filter($sql, $str, $config_name);
 				}
 				else
 				{
-					$sql = "INSERT INTO _config (config_name, config_value) VALUES ('" . addslashes($config_name) . "', '" . addslashes($str) . "')";
+					$sql_insert = array(
+						'config_name' => $config_name,
+						'config_value' => $str
+					);
+					$sql = 'INSERT INTO _config' . sql_build('INSERT', $sql_insert);
 				}
-				$db->sql_query($sql);
+				sql_query($sql);
+				
 				$core->config[$config_name] = $str;
 				
 				return true;

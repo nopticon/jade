@@ -1,9 +1,7 @@
 <?php
 /*
-$Id: emailer.php,v 1.1.1.1 2006/08/02 16:07:31 Psychopsia Exp $
-
-<Ximod, a web development framework.>
-Copyright (C) <2009>  <Nopticon>
+<Jade, Email Server.>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -140,7 +138,7 @@ class emailer
 	// Send the mail out to the recipients set previously in var $this->address
 	function send()
 	{
-		global $core, $user, $db;
+		global $core, $user;
 		
 		// Escape all quotes, else the eval will fail.
 		$this->msg = str_replace ("'", "\'", $this->msg);

@@ -1,9 +1,7 @@
 <?php
 /*
-$Id: session.php,v 1.1.1.1 2006/08/02 16:07:31 Psychopsia Exp $
-
-<Ximod, a web development framework.>
-Copyright (C) <2009>  <Nopticon>
+<Jade, Email Server.>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,7 +32,7 @@ class session
 	
 	function start($update_page = true, $auto_session = false)
 	{
-		global $db, $core;
+		global $core;
 		
 		$this->time = time();
 		$this->browser = (!empty($_SERVER['HTTP_USER_AGENT'])) ? $_SERVER['HTTP_USER_AGENT'] : '';
@@ -77,14 +75,11 @@ class session
 		// Is session_id is set
 		if (!empty($this->session_id))
 		{
-			$sql = "SELECT m.*, s.*
+			$sql = 'SELECT m.*, s.*
 				FROM _sessions s, _members m
-				WHERE s.session_id = '" . $db->sql_escape($this->session_id) . "'
-					AND m.user_id = s.session_user_id";
-			$result = $db->sql_query($sql);
-			
-			$this->data = $db->sql_fetchrow($result);
-			$db->sql_freeresult($result);
+				WHERE s.session_id = ?
+					AND m.user_id = s.session_user_id';
+			$this->data = sql_fieldrow(sql_filter($sql, $this->session_id));
 			
 			// Did the session exist in the DB?
 			if (isset($this->data['user_id']))
@@ -97,14 +92,20 @@ class session
 					// Only update session DB a minute or so after last update or if page changes
 					if ($this->time - $this->data['session_time'] > 60 || $this->data['session_page'] != $this->page)
 					{
-						$sql = 'UPDATE _sessions
-							SET session_time = ' . (int) $this->time . (($update_page) ? ", session_page = '" . $db->sql_escape($this->page) . "'" : '') . " 
-							WHERE session_id = '" . $db->sql_escape($this->session_id) . "'";
-						$db->sql_query($sql);
+						$sql_update = array(
+							'session_time' => time()
+						);
+						
+						if ($update_page) {
+							$sql_update['session_page'] = $this->page;
+						}
+						
+						$sql = 'UPDATE _sessions SET ?? 
+							WHERE session_id = ?';
+						sql_query(sql_filter($sql, sql_build('UPDATE', $sql_update), $this->session_id));
 					}
 					
-					if ($update_page)
-					{
+					if ($update_page) {
 						$this->data['session_page'] = $this->page;
 					}
 					
@@ -153,7 +154,7 @@ class session
 	*/
 	function session_create($user_id = false, $update_page = true)
 	{
-		global $db, $core;
+		global $core;
 		
 		$this->data = array();
 		
@@ -171,12 +172,9 @@ class session
 			
 			$sql = 'SELECT *
 				FROM _members
-				WHERE user_id = ' . (int) $this->cookie_data['u'] . '
-					AND user_type <> 2';
-			$result = $db->sql_query($sql);
-			
-			$this->data = $db->sql_fetchrow($result);
-			$db->sql_freeresult($result);
+				WHERE user_id = ?
+					AND user_type <> ?';
+			$this->data = sql_fieldrow(sql_filter($sql, $this->cookie_data['u'], 2));
 		}
 		
 		// If no data was returned one or more of the following occured:
@@ -189,34 +187,24 @@ class session
 			
 			$sql = 'SELECT *
 				FROM _members
-				WHERE user_id = ' . (int) $this->cookie_data['u'];
-			$result = $db->sql_query($sql);
-			
-			$this->data = $db->sql_fetchrow($result);
-			$db->sql_freeresult($result);
+				WHERE user_id = ?';
+			$this->data = sql_fieldrow(sql_filter($sql, $this->cookie_data['u']));
 		}
 		
 		if ($this->data['user_id'] != U_GUEST)
 		{
 			$sql = 'SELECT session_time, session_id
 				FROM _sessions
-				WHERE session_user_id = ' . (int) $this->data['user_id'] . '
+				WHERE session_user_id = ?
 				ORDER BY session_time DESC';
-			$result = $db->sql_query_limit($sql, 1);
-			
-			if ($sdata = $db->sql_fetchrow($result))
-			{
+			if ($sdata = sql_fieldrow(sql_filter($sql, $this->data['user_id']))) {
 				$this->data = array_merge($sdata, $this->data);
 				unset($sdata);
 				$this->session_id = $this->data['session_id'];
-				
-				$db->sql_freeresult($result);
-	  		}
+			}
 			
 			$this->data['session_last_visit'] = (isset($this->data['session_time']) && $this->data['session_time']) ? $this->data['session_time'] : (($this->data['user_lastvisit']) ? $this->data['user_lastvisit'] : $this->time);
-		}
-		else
-		{
+		} else {
 			$this->data['session_last_visit'] = $this->time;
 		}
 		
@@ -249,16 +237,18 @@ class session
 			$this->data['session_page'] = $sql_ary['session_page'];
 		}
 		
-		$sql = 'UPDATE _sessions SET ' . $db->sql_build_array('UPDATE', $sql_ary) . "
-			WHERE session_id = '" . $db->sql_escape($this->session_id) . "'";
-		if (!$this->session_id || !$db->sql_query($sql) || !$db->sql_affectedrows())
+		$sql = 'UPDATE _sessions SET ??
+			WHERE session_id = ?';
+		sql_query(sql_filter($sql, sql_build('UPDATE', $sql_ary), $this->session_id));
+		
+		if (!$this->session_id || !sql_affectedrows())
 		{
 			$this->session_id = $this->data['session_id'] = md5(unique_id());
 			
 			$sql_ary['session_id'] = (string) $this->session_id;
 			
-			$sql = 'INSERT INTO _sessions' . $db->sql_build_array('INSERT', $sql_ary);
-			$db->sql_query($sql);
+			$sql = 'INSERT INTO _sessions' . sql_build('INSERT', $sql_ary);
+			sql_query($sql);
 		}
 		
 		$cookie_expire = $this->time + 31536000;
@@ -272,28 +262,17 @@ class session
 	
 	function auto_session(&$auto_session)
 	{
-		global $db;
-		
 		$sql = "SELECT user_id, user_username, user_auto_session
 			FROM _members
-			WHERE user_current_ip = '" . $db->sql_escape($this->i_ip) . "'
+			WHERE user_current_ip = ?
 				AND user_auto_session = 1
 				AND user_inactive = 0
 				AND user_internal = 1
 				AND user_id <> 1";
-		$result = $db->sql_query($sql);
+		$contacts = sql_rowset(sql_filter($sql, $this->i_ip));
 		
-		$contacts = array();
-		while ($row = $db->sql_fetchrow($result))
-		{
-			$contacts[] = $row;
-		}
-		$db->sql_freeresult($result);
-		
-		if ($s = count($contacts))
-		{
-			if ($s == 1)
-			{
+		if ($s = count($contacts)) {
+			if ($s == 1) {
 				$this->session_create($contacts[0]['user_id'], true);
 				return true;
 			}
@@ -314,30 +293,23 @@ class session
 	*/
 	function session_kill()
 	{
-		global $db;
-		
-		$sql = "DELETE FROM _sessions
-			WHERE session_id = '" . $db->sql_escape($this->session_id) . "'
-				AND session_user_id = " . (int) $this->data['user_id'];
-		$db->sql_query($sql);
+		$sql = 'DELETE FROM _sessions
+			WHERE session_id = ?
+				AND session_user_id = ?';
+		sql_query(sql_filter($sql, $this->session_id, $this->data['user_id']));
 		
 		if ($this->data['user_id'] != U_GUEST)
 		{
 			// Delete existing session, update last visit info first!
-			$sql = 'UPDATE _members
-				SET user_lastvisit = ' . (int) $this->data['session_time'] . '
-				WHERE user_id = ' . (int) $this->data['user_id'];
-			$db->sql_query($sql);
+			$sql = 'UPDATE _members SET user_lastvisit = ?
+				WHERE user_id = ?';
+			sql_query(sql_filter($sql, $this->data['session_time'], $this->data['user_id']));
 			
 			// Reset the data array
 			$sql = 'SELECT *
 				FROM _members
-				WHERE user_id = ' . U_GUEST;
-			$result = $db->sql_query($sql);
-			
-			$this->data = array();
-			$this->data = $db->sql_fetchrow($result);
-			$db->sql_freeresult($result);
+				WHERE user_id = ?';
+			$this->data = sql_fieldrow(sql_filter($sql, U_GUEST));
 		}
 		
 		$cookie_expire = $this->time - 31536000;
@@ -361,39 +333,37 @@ class session
 	*/
 	function session_gc()
 	{
-		global $core, $db;
+		global $core;
 		
 		// Get expired sessions, only most recent for each user
 		$sql = 'SELECT session_user_id, session_page, MAX(session_time) AS recent_time
 			FROM _sessions
-			WHERE session_time < ' . ($this->time - $core->v('session_length')) . '
-			GROUP BY session_user_id, session_page';
-		$result = $db->sql_query_limit($sql, 5);
+			WHERE session_time < ?
+			GROUP BY session_user_id, session_page
+			LIMIT 5';
+		$result = sql_rowset(sql_filter($sql, ($this->time - $core->v('session_length'))));
 		
 		$del_user_id = '';
 		$del_sessions = 0;
-		while ($row = $db->sql_fetchrow($result))
-		{
-			if ($row['session_user_id'] != U_GUEST)
-			{
-				$sql = 'UPDATE _members
-					SET user_lastvisit = ' . $row['recent_time'] . ", user_lastpage = '" . $db->sql_escape($row['session_page']) . "'
-					WHERE user_id = " . $row['session_user_id'];
-				$db->sql_query($sql);
+		
+		foreach ($result as $row) {
+			if ($row['session_user_id'] != U_GUEST) {
+				$sql = 'UPDATE _members SET user_lastvisit = ?, user_lastpage = ?
+					WHERE user_id = ?';
+				sql_query(sql_filter($sql, $row['recent_time'], $row['session_page'], $row['session_user_id']));
 			}
 			
 			$del_user_id .= (($del_user_id != '') ? ', ' : '') . (int) $row['session_user_id'];
 			$del_sessions++;
 		}
-		$db->sql_freeresult($result);
 		
 		if ($del_user_id != '')
 		{
 			// Delete expired sessions
 			$sql = 'DELETE FROM _sessions
-				WHERE session_user_id IN (' . $del_user_id . ')
-					AND session_time < ' . (int) ($this->time - $core->v('session_length'));
-			$db->sql_query($sql);
+				WHERE session_user_id IN (??)
+					AND session_time < ?';
+			sql_query(sql_filter($sql, $del_user_id, ($this->time - $core->v('session_length'))));
 		}
 		
 		if ($del_sessions < 5)
@@ -454,7 +424,7 @@ class user extends session
 	
 	function setup()
 	{
-		global $db, $style, $core;
+		global $style, $core;
 		
 		$this->lang_name = $core->v('default_lang');
 		$this->lang_path = './base/lang/' . $this->lang_name . '/';
@@ -570,21 +540,14 @@ class user extends session
 	
 	function _groups()
 	{
-		global $db, $core;
+		global $core;
 		
 		if (!$groups = $core->cache_load('groups'))
 		{
 			$sql = 'SELECT *
 				FROM _groups
 				ORDER BY group_id';
-			$result = $db->sql_query($sql);
-			
-			$groups = array();
-			while ($row = $db->sql_fetchrow($result))
-			{
-				$groups[$row['group_id']] = $row;
-			}
-			$db->sql_freeresult($result);
+			$groups = sql_rowset($sql, 'group_id');
 		}
 		
 		return $groups;
@@ -592,8 +555,6 @@ class user extends session
 	
 	function auth_groups()
 	{
-		global $db;
-		
 		$groups = array();
 		if ($this->data['is_founder'])
 		{
@@ -605,15 +566,8 @@ class user extends session
 			$sql = 'SELECT g.group_id
 				FROM _groups g, _groups_members m
 				WHERE g.group_id = m.ug_group
-					AND m.ug_member = ' . (int) $this->data['user_id'];
-			$result = $db->sql_query($sql);
-			
-			$groups = array();
-			while ($row = $db->sql_fetchrow($result))
-			{
-				$groups[] = $row['group_id'];
-			}
-			$db->sql_freeresult($result);
+					AND m.ug_member = ?';
+			$groups = sql_rowset(sql_filter($sql, $this->data['user_id']), false, 'group_id');
 		}
 		
 		return (count($groups) ? implode(',', $groups) : '0');
@@ -627,24 +581,22 @@ class user extends session
 	
 	function auth_query($uid = false)
 	{
-		global $db, $s;
+		global $s;
 		
 		$this->auth[$uid] = array();
 		
 		$sql = 'SELECT auth_name, auth_value
 			FROM _members_auth
-			WHERE auth_uid = ' . (int) $uid . '
+			WHERE auth_uid = ?
 			ORDER BY auth_name';
-		$result = $db->sql_query($sql);
+		$result = sql_rowset(sql_filter($sql, $uid));
 		
-		while ($row = $db->sql_fetchrow($result))
-		{
+		foreach ($result as $row) {
 			$k = unserialize(decode($row['auth_name']));
 			$v = unserialize(decode($row['auth_value']));
 			
 			$this->auth[$uid][$k] = $v;
 		}
-		$db->sql_freeresult($result);
 		
 		return $this->auth[$uid];
 	}
@@ -677,7 +629,7 @@ class user extends session
 	
 	function auth_modify($k, $v, $uid = false)
 	{
-		global $db, $s;
+		global $s;
 		
 		if ($uid === false)
 		{
@@ -686,29 +638,24 @@ class user extends session
 		
 		$sql = 'SELECT auth_name
 			FROM _members_auth
-			WHERE auth_id = ' . (int) $k;
-		$result = $db->sql_query($sql);
-		
-		if ($row = $db->sql_fetchrow($result))
-		{
+			WHERE auth_id = ?';
+		if ($row = sql_fieldrow(sql_filter($sql, $k))) {
 			$sql_v = encode(serialize($v));
 			$sql_k = unserialize(decode($row['auth_name']));
 			
-			$sql = "UPDATE _members_auth
-				SET auth_value = '" . $db->sql_escape($sql_v) . "'
-				WHERE auth_id = " . (int) $k;
-			$db->sql_query($sql);
+			$sql = 'UPDATE _members_auth SET auth_value = ?
+				WHERE auth_id = ?';
+			sql_query(sql_filter($sql, $sql_v, $k));
 			
 			$this->auth[$uid][$sql_k] = $v;
 		}
-		$db->sql_freeresult($result);
 		
 		return;
 	}
 	
 	function auth_update($k, $v, $uid = false, $force = false)
 	{
-		global $db, $s;
+		global $s;
 		
 		if ($uid === false)
 		{
@@ -726,22 +673,21 @@ class user extends session
 		
 		if ($force === false)
 		{
-			$sql = "UPDATE _members_auth
-				SET auth_value = '" . $db->sql_escape($sql_v) . "'
-				WHERE auth_uid = " . (int) $uid . "
-					AND auth_name = '" . $db->sql_escape($sql_k) . "'";
-			$db->sql_query($sql);
+			$sql = 'UPDATE _members_auth SET auth_value = ?
+				WHERE auth_uid = ?
+					AND auth_name = ?';
+			sql_query(sql_filter($sql, $sql_v, $uid, $sql_k));
 		}
 		
-		if (!$db->sql_affectedrows() || $force === true)
+		if (!sql_affectedrows() || $force === true)
 		{
 			$insert = array(
 				'auth_uid' => (int) $uid,
 				'auth_name' => $sql_k,
 				'auth_value' => $sql_v
 			);
-			$sql = 'INSERT INTO _members_auth' . $db->sql_build_array('INSERT', $insert);
-			$db->sql_query($sql);
+			$sql = 'INSERT INTO _members_auth' . sql_build('INSERT', $insert);
+			sql_query($sql);
 		}
 		
 		$this->auth[$uid][$k] = $v;
@@ -751,7 +697,7 @@ class user extends session
 	
 	function auth_remove($k, $uid = false)
 	{
-		global $db, $s;
+		global $s;
 		
 		if ($uid === false)
 		{
@@ -760,10 +706,10 @@ class user extends session
 		
 		$sql_k = encode(serialize($k));
 		
-		$sql = "DELETE FROM _members_auth
-			WHERE auth_name = '" . $db->sql_escape($sql_k) . "'
-				AND auth_uid = " . (int) $uid;
-		$db->sql_query($sql);
+		$sql = 'DELETE FROM _members_auth
+			WHERE auth_name = ?
+				AND auth_uid = ?';
+		sql_query(sql_filter($sql, $sql_k, $uid));
 		
 		$this->auth[$uid][$k] = false;
 		
@@ -779,18 +725,9 @@ class core
 	
 	function core()
 	{
-		global $db;
-		
 		$sql = 'SELECT *
 			FROM _config';
-		$result = $db->sql_query($sql);
-		
-		while ($row = $db->sql_fetchrow($result))
-		{
-			$this->config[$row['config_name']] = $row['config_value'];
-		}
-		$db->sql_freeresult($result);
-		
+		$this->config = sql_rowset($sql, 'config_name', 'config_value');
 		$this->config['request_method'] = strtolower($_SERVER['REQUEST_METHOD']);
 		
 		$this->cache_dir = XFS . 'core/cache/';
@@ -798,21 +735,18 @@ class core
 	
 	function update_config($config_name, $config_value)
 	{
-		global $db;
-		
 		$update = array('config_value' => $config_value);
 		
-		$sql = 'UPDATE _config
-			SET ' . $db->sql_build_array('UPDATE', $update) . "
-			WHERE config_name = '" . $db->sql_escape($config_name) . "'";
-		$db->sql_query($sql);
+		$sql = 'UPDATE _config SET ??
+			WHERE config_name = ?';
+		sql_query(sql_filter($sql, sql_build('UPDATE', $update), $config_name));
 		
-		if (!$db->sql_affectedrows() && !isset($this->config[$config_name]))
+		if (!sql_affectedrows() && !isset($this->config[$config_name]))
 		{
 			$update['config_name'] = $config_name;
 			
-			$sql = 'INSERT INTO _config' . $db->sql_build_array('INSERT', $update);
-			$db->sql_query($sql);
+			$sql = 'INSERT INTO _config' . sql_build('INSERT', $update);
+			sql_query($sql);
 		}
 		
 		$this->config[$config_name] = $config_value;
@@ -820,8 +754,6 @@ class core
 	
 	function v($k, $v = false)
 	{
-		global $db;
-		
 		$a = (isset($this->config[$k])) ? $this->config[$k] : false;
 		
 		if ($v !== false)
@@ -830,16 +762,16 @@ class core
 			
 			if ($a !== false)
 			{
-				$sql = 'UPDATE _config
-					SET ' . $db->sql_build_array('UPDATE', $update) . "
-					WHERE config_name = '" . $db->sql_escape($k) . "'";
+				$sql = 'UPDATE _config SET ??
+					WHERE config_name = ?';
+				$sql = sql_filter($sql, sql_build('UPDATE', $update), $k);
 			}
 			else
 			{
 				$update['config_name'] = $k;
-				$sql = 'INSERT INTO _config' . $db->sql_build_array('INSERT', $update);
+				$sql = 'INSERT INTO _config' . sql_build('INSERT', $update);
 			}
-			$db->sql_query($sql);
+			sql_query($sql);
 			$this->config[$k] = $a = $v;
 		}
 		

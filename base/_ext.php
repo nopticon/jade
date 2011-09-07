@@ -1,9 +1,7 @@
 <?php
 /*
-$Id: _ext.php,v 2.0 2009/01/12 08:27:00 Psychopsia Exp $
-
-<Nopticon, a web development framework.>
-Copyright (C) <2009>  <Nopticon>
+<Jade, Email Server.>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,17 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class __ext extends xmd
-{
+class __ext extends xmd {
 	var $methods = array();
 	
-	function home()
-	{
+	function home() {
 		global $user, $style;
 		
 		$v = $this->__(array('f', 'e'));
-		if (empty($v['f']) || empty($v['e']))
-		{
+		if (empty($v['f']) || empty($v['e'])) {
 			_fatal();
 		}
 		
@@ -39,14 +34,11 @@ class __ext extends xmd
 		$browser = array('firefox' => 'Gecko', 'ie' => 'IE', 'comp' => 'compatible');
 		$sv = w();
 		
-		switch ($v['e'])
-		{
+		switch ($v['e']) {
 			case 'css':
-				if ($v['f'] != 'default')
-				{
+				if ($v['f'] != 'default') {
 					$v['field'] = 'alias';
-					if (preg_match('#^\d+$#is', $v['f']))
-					{
+					if (preg_match('#^\d+$#is', $v['f'])) {
 						$v['field'] = 'id';
 					}
 					
@@ -54,14 +46,12 @@ class __ext extends xmd
 						FROM _tree
 						WHERE tree_' . $this->_escape($v['field']) . " = '" . $this->_escape($v['f']) . "'
 						LIMIT 1";
-					if (!$tree = $this->_fieldrow($sql))
-					{
+					if (!$tree = $this->_fieldrow($sql)) {
 						_fatal();
 					}
 					
 					$v['f'] = '_tree_' . $this->alias_id($tree);
-					if (!@file_exists($filepath . _filename($v['f'], $v['e'])))
-					{
+					if (!@file_exists($filepath . _filename($v['f'], $v['e']))) {
 						_fatal();
 					}
 					$browser[$this->alias_id($tree)] = true;
@@ -70,11 +60,9 @@ class __ext extends xmd
 				
 				$sv['CSSPATH'] = LIBD . 'style';
 				
-				foreach ($browser as $css_k => $css_v)
-				{
+				foreach ($browser as $css_k => $css_v) {
 					$css_match = (strstr($user->browser, $css_v) || $css_v === true) ? true : false;
-					if ($css_match && @file_exists($filepath . '_tree_' . $css_k . '.css'))
-					{
+					if ($css_match && @file_exists($filepath . '_tree_' . $css_k . '.css')) {
 						$style->set_filenames(array('css' => 'css/_tree_' . $css_k . '.css'));
 						$style->assign_var_from_handle('S_CSS', 'css');
 						$style->assign_block_vars('includes', array('CSS' => $style->vars['S_CSS']));
@@ -85,23 +73,20 @@ class __ext extends xmd
 				$this->as_vars($sv);
 				break;
 			case 'js':
-				if (!@file_exists($filepath . $filename))
-				{
+				if (!@file_exists($filepath . $filename)) {
 					_fatal();
 				}
 				
 				require_once(XFS . 'core/jsmin.php');
 				
-				foreach ($browser as $css_k => $css_v)
-				{
+				foreach ($browser as $css_k => $css_v) {
 					$css_match = (strstr($user->browser, $css_v) || $css_v === true) ? true : false;
 					$sv[strtoupper($css_k)] = $css_match;
 				}
 				break;
 		}
 		
-		if ($sv['COMP'] || $sv['FIREFOX'])
-		{
+		if ($sv['COMP'] || $sv['FIREFOX']) {
 			ob_start('ob_gzhandler');
 		}
 		
@@ -126,8 +111,7 @@ class __ext extends xmd
 			header('Last-Modified: ' . gmdate('D, d, M Y H:i:s', $lastmodified) . ' GMT');
 		}*/
 		
-		if ($v['e'] == 'js')
-		{
+		if ($v['e'] == 'js') {
 			$style->replace_vars = false;
 		}
 		
@@ -135,8 +119,7 @@ class __ext extends xmd
 		$style->set_filenames(array('body' => $v['e'] . '/' . $filename));
 		$style->assign_var_from_handle('EXT', 'body');
 		
-		switch ($v['e'])
-		{
+		switch ($v['e']) {
 			case 'css':
 				$code = str_replace(array("\r\n", "\n", "\t"), '', $style->vars['EXT']);
 				break;
@@ -146,7 +129,7 @@ class __ext extends xmd
 		}
 		
 		echo $code;
-		exit();
+		exit;
 	}
 }
 

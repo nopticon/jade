@@ -1,9 +1,7 @@
 <?php
 /*
-$Id: modules.php,v 1.6 2009/01/12 15:00:00 Psychopsia Exp $
-
-<Ximod, a web development framework.>
-Copyright (C) <2009>  <Nopticon>
+<Jade, Email Server.>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -313,129 +311,6 @@ class xmd extends project
 		return (!empty($tree[$alias])) ? $tree[$alias] : $tree[$id];
 	}
 	
-	function _sql($sql)
-	{
-		global $db;
-		
-		return $db->sql_query($sql);
-	}
-	
-	function _field($sql, $field, $def = false)
-	{
-		global $db;
-		
-		$result = $db->sql_query($sql);
-		$response = $db->sql_fetchfield($field);
-		$db->sql_freeresult($result);
-		
-		if ($response === false)
-		{
-			$response = $def;
-		}
-		
-		return $response;
-	}
-	
-	function _fieldrow($sql)
-	{
-		global $db;
-		
-		$result = $db->sql_query($sql);
-		
-		$response = false;
-		if ($row = $db->sql_fetchrow($result))
-		{
-			$row['_numrows'] = $db->sql_numrows($result);
-			$response = $row;
-		}
-		$db->sql_freeresult($result);
-		
-		return $row;
-	}
-	
-	function _rowset($sql, $field_a = false, $field_b = false, $grouped = false)
-	{
-		global $db;
-		
-		$result = $db->sql_query($sql);
-		
-		$a = array();
-		while ($row = $db->sql_fetchrow($result))
-		{
-			$z = ($field_b === false) ? $row : $row[$field_b];
-			if ($field_a === false) {
-				$a[] = $z;
-			} else {
-				eval('$a[$row[$field_a]]' . (($grouped) ? '[]' : '') . ' = $z;');
-			}
-		}
-		$db->sql_freeresult($result);
-		
-		return $a;
-	}
-	
-	function _nextid()
-	{
-		global $db;
-		
-		return $db->sql_nextid();
-	}
-	
-	function _escape($sql)
-	{
-		global $db;
-		
-		return $db->sql_escape($sql);
-	}
-	
-	function _build_array($cmd, $a)
-	{
-		global $db;
-		
-		return $db->sql_build_array($cmd, $a);
-	}
-	
-	function _affectedrows()
-	{
-		global $db;
-		
-		return $db->sql_affectedrows();
-	}
-	
-	function sql_cache($a_sql, $sid = '', $private = true)
-	{
-		global $db;
-		
-		return $db->sql_cache($a_sql, $sid, $private);
-	}
-	
-	function sql_cache_limit(&$arr, $start, $end = 0)
-	{
-		global $db;
-		
-		$a = $db->sql_cache_limit($arr, $start, $end);
-		return $a;
-	}
-	
-	function _numrows(&$a)
-	{
-		$response = $a['_numrows'];
-		unset($a['_numrows']);
-		return $response;
-	}
-	
-	function sql_close()
-	{
-		global $db;
-		
-		if (isset($db))
-		{
-			$db->sql_close();
-			return true;
-		}
-		return false;
-	}
-	
 	function as_vars($vars)
 	{
 		global $style;
@@ -474,15 +349,12 @@ class xmd extends project
 	
 	function _select($sql, $el, $id, $name)
 	{
-		global $db, $style;
+		global $style;
 		
-		$rows = $this->_rowset($sql, $id);
-		if (count($rows))
-		{
+		if ($rows = sql_rowset($sql, $id)) {
 			$style->assign_block_vars($el, array());
 			
-			foreach ($rows as $row)
-			{
+			foreach ($rows as $row) {
 				$style->assign_block_vars($el . '.item', array(
 					'ID' => $row[$id],
 					'NAME' => $row[$name])
@@ -495,7 +367,7 @@ class xmd extends project
 	
 	function e($msg = '')
 	{
-		global $db, $user;
+		global $user;
 		
 		if ($msg == '!' && !$this->errors())
 		{
@@ -530,7 +402,7 @@ class xmd extends project
 			}
 		}
 		
-		$db->sql_close();
+		sql_close();
 		
 		if (!is_array($msg))
 		{

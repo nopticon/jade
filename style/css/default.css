@@ -1,12 +1,12 @@
 body {
-	background: #EEEEEE;
+	background: #EEE;
 }
 body, div, input, textarea, a {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 11px;
+	font-family: 'Actor', Verdana, Helvetica, sans-serif;
+	font-size: 11pt;
 }
 body, div, input, textarea {
-	color: #666666;
+	color: #444;
 }
 body, div, span, h1, h2, h3 {
 	cursor: default;
@@ -18,7 +18,7 @@ img {
 form {
 	margin: 0;
 }
-input {
+input, textarea {
 	border: 1px solid #CCCCCC;
 	background: #FFFFFF;
 }
@@ -34,13 +34,12 @@ h1, h2, h3 {
 	font-weight: normal;
 	margin: 0;
 	padding: 0 0 5px 0;
-	font-family: Arial, Helvetica, sans-serif;
+	font-family: 'Tangerine', Verdana, Helvetica, sans-serif;
 	text-align: left;
-	line-height: 20px;
-	color: #2D5986;
+	color: #444;
 }
 h1 {
-	font-size: 22px;
+	font-size: 50px;
 }
 h2 {
 	font-size: 20px;
@@ -52,11 +51,12 @@ h3 {
 label {
 	width: 20%;
 	background: #a3b6bc;
-	color: #f6fbfe;
+	color: #fff;
 	float: left;
 	clear: both;
 	display: block;
 	padding: 3px;
+	margin-top: 1px;
 	margin-right: 5px;
 }
 .field_area input {

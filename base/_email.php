@@ -1,9 +1,7 @@
 <?php
 /*
-$Id: _email.php,v 1.0 2009/01/29 22:35:00 Psychopsia Exp $
-
-<Ximod, a web development framework.>
-Copyright (C) <2009>  <Nopticon>
+<Jade, Email Server.>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -265,17 +263,33 @@ class __email extends xmd {
 				$this->e('El email ya esta programado para envio, no se puede duplicar.');
 			}
 			
-			// d m y 
-			//$vs = explode(' ', $v['lastvisit']);
-			//$v['lastvisit'] = mktime(0, 0, 0, $vs[1], $vs[0], $vs[2]);
 			$v['active'] = 1;
-			
 			$v['message'] = str_replace(array('&lt;', '&gt;', '&quot;'), array('<', '>', '"'), $v['message']);
 			
 			$sql = 'INSERT INTO _email' . $this->_build_array('INSERT', ksql('email', $v));
 			$this->_sql($sql);
 			
 			$this->e('El mensaje fue programado para envio de email.');
+		}
+		
+		$tables = $this->_rowset('SHOW TABLES');
+		
+		$i = 0;
+		foreach ($tables as $table) {
+			$table = $table[0];
+			$search = '_email_';
+			
+			if (preg_match('#' . $search . '#i', $table)) {
+				if (!$i) {
+					$style->assign_block_vars('tables', array());
+				}
+				
+				$style->assign_block_vars('tables.row', array(
+					'TABLE' => str_replace($search, '', $table))
+				);
+				
+				$i++;
+			}
 		}
 		
 		$sv = array(

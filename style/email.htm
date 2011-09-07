@@ -1,21 +1,46 @@
 <!-- INCLUDE page.header.htm -->
 
 <div id="mainframe">
-
 <form action="{_SELF}" method="post">
+	
+	<!-- BEGIN tables -->
+	<div class="m_top_tiny field_area float-holder ie-widthfix">
+		<label for="subject">Fuente de datos</label>
+		<select id="data" name="data" class="w8">
+			<!-- BEGIN row -->
+			<option value="{row.TABLE}">{row.TABLE}</option>
+			<!-- END row -->
+		</select>
+	</div>
+	<!-- END tables -->
+	
+	<br />
+	
+	<div class="m_top_tiny field_area float-holder ie-widthfix">
+		<label for="subject">Nombre de Remitente</label>
+		<input type="text" class="w8" id="from" name="from" value="{FROM}" />
+	</div>
+	<div class="m_top_tiny field_area float-holder ie-widthfix">
+		<label for="subject">Direcci&oacute;n de Remitente</label>
+		<input type="text" class="w8" id="from" name="from" value="{FROM_ADDRESS}" />
+	</div>
+	
+	<br />
+	
+	<div class="m_top_tiny field_area float-holder ie-widthfix">
+		<label for="subject">Asunto de mensaje</label>
+		<input type="text" class="w8" id="subject" name="subject" value="{SUBJECT}" />
+	</div>
+	
+	<div class="m_top_tiny field_area float-holder ie-widthfix">
+		<textarea id="message" class="w0" name="message" rows="15" cols="50">{MESSAGE}</textarea>
+	</div>
+	
+	<div class="m_top_mid a_center">
+		<input type="submit" name="submit" value="Guardar cambios" />
+	</div>
 
-<div class="m_top_tiny field_area float-holder ie-widthfix">
-<label for="subject">Asunto</label>
-<input type="text" class="w8" id="subject" name="subject" value="{SUBJECT}" />
-</div>
-
-<div class="m_top_tiny field_area float-holder ie-widthfix">
-<textarea id="message" class="w0" name="message" rows="15" cols="50">{MESSAGE}</textarea>
-</div>
-
-<div class="m_top_mid a_center"><input type="submit" name="submit" value="Guardar cambios" /></div>
 </form>
-
 </div>
 
 <!-- INCLUDE page.footer.htm -->

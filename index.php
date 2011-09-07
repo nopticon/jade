@@ -1,9 +1,7 @@
 <?php
 /*
-$Id: index.php,v 1.4 2009/01/05 14:31:00 Psychopsia Exp $
-
-<Ximod, a web development framework.>
-Copyright (C) <2009>  <Nopticon>
+<Jade, Email Server.>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,6 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 define('XFS', './');
-include(XFS . 'core/common.php');
+include(XFS . 'core/application.php');
 
 ?>

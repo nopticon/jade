@@ -1,9 +1,7 @@
 <?php
 /*
-$Id: db.php,v 1.1.1.1 2006/08/02 16:07:31 Psychopsia Exp $
-
-<Ximod, a web development framework.>
-Copyright (C) <2009>  <Nopticon>
+<Jade, Email Server.>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

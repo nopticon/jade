@@ -1,9 +1,7 @@
 <?php
 /*
-$Id: core.php,v 3.1 2009/01/15 15:09:00 Psychopsia Exp $
-
-<Ximod, a web development framework.>
-Copyright (C) <2009>  <Nopticon>
+<Jade, Email Server.>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,12 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-function htmlencode($str, $multibyte = false)
-{
+function htmlencode($str, $multibyte = false) {
 	$result = trim(htmlentities(str_replace(array("\r\n", "\r", '\xFF'), array("\n", "\n", ' '), $str)));
 	$result = (STRIP) ? stripslashes($result) : $result;
-	if ($multibyte)
-	{
+	
+	if ($multibyte) {
 		$result = preg_replace('#&amp;(\#\d+;)#', '&\1', $result);
 	}
 	$result = preg_replace('#&amp;((.*?);)#', '&\1', $result);
@@ -33,13 +30,11 @@ function htmlencode($str, $multibyte = false)
 	return $result;
 }
 
-function set_var(&$result, $var, $type, $multibyte = false, $regex = '')
-{
+function set_var(&$result, $var, $type, $multibyte = false, $regex = '') {
 	settype($var, $type);
 	$result = $var;
 
-	if ($type == 'string')
-	{
+	if ($type == 'string') {
 		$result = htmlencode($result, $multibyte);
 	}
 }
@@ -47,68 +42,50 @@ function set_var(&$result, $var, $type, $multibyte = false, $regex = '')
 //
 // Get value of request var
 //
-function request_var($var_name, $default, $multibyte = false, $regex = '')
-{
-	if (!isset($_REQUEST[$var_name]) || (is_array($_REQUEST[$var_name]) && !is_array($default)) || (is_array($default) && !is_array($_REQUEST[$var_name])))
-	{
+function request_var($var_name, $default, $multibyte = false, $regex = '') {
+	if (!isset($_REQUEST[$var_name]) || (is_array($_REQUEST[$var_name]) && !is_array($default)) || (is_array($default) && !is_array($_REQUEST[$var_name]))) {
 		return (is_array($default)) ? array() : $default;
 	}
 
 	$var = $_REQUEST[$var_name];
-	if (!is_array($default))
-	{
+	if (!is_array($default)) {
 		$type = gettype($default);
 		$var = ($var);
-	}
-	else
-	{
+	} else {
 		list($key_type, $type) = each($default);
 		$type = gettype($type);
 		$key_type = gettype($key_type);
 	}
 
-	if (is_array($var))
-	{
+	if (is_array($var)) {
 		$_var = $var;
 		$var = array();
 
-		foreach ($_var as $k => $v)
-		{
-			if (is_array($v))
-			{
-				foreach ($v as $_k => $_v)
-				{
+		foreach ($_var as $k => $v) {
+			if (is_array($v)) {
+				foreach ($v as $_k => $_v) {
 					set_var($k, $k, $key_type);
 					set_var($_k, $_k, $key_type);
 					set_var($var[$k][$_k], $_v, $type, $multibyte);
 				}
-			}
-			else
-			{
+			} else {
 				set_var($k, $k, $key_type);
 				set_var($var[$k], $v, $type, $multibyte);
 			}
 		}
-	}
-	else
-	{
+	} else {
 		set_var($var, $var, $type, $multibyte);
 	}
 	
 	return $var;
 }
 
-function _utf8($a)
-{
-	if (is_array($a))
-	{
-		foreach ($a as $k => $v)
-		{
+function _utf8($a) {
+	if (is_array($a)) {
+		foreach ($a as $k => $v) {
 			$a[$k] = _utf8($v);
 		}
-	}
-	else
-	{
+	} else {
 		$a = utf8_decode($a);
 	}
 	
@@ -127,14 +104,60 @@ function uset(&$k, $v)
 	return $response;
 }
 
+function get_file($f)
+{
+	if (!f($f)) return false;
+	
+	if (!@file_exists($f))
+	{
+		return w();
+	}
+	
+	return array_map('trim', @file($f));
+}
+
+function f($s) {
+	return !empty($s);
+}
+
+function decode_ht($path) {
+	$da_path = XFS . $path;
+	
+	if (!@file_exists($da_path) || !$a = @file($da_path)) exit;
+	
+	return explode(',', decode($a[0]));
+}
+
+function hook($name, $args = array(), $arr = false)
+{
+	switch ($name)
+	{
+		case 'isset':
+			eval('$a = ' . $name . '($args' . ((is_array($args)) ? '[0]' . $args[1] : '') . ');');
+			return $a;
+			break;
+		case 'in_array':
+			if (is_array($args[1]))
+			{
+				if (hook('isset', array($args[1][0], $args[1][1])))
+				{
+					eval('$a = ' . $name . '($args[0], $args[1][0]' . $args[1][1] . ');');
+				}
+			} else {
+				eval('$a = ' . $name . '($args[0], $args[1]);');
+			}
+			
+			return (isset($a)) ? $a : false;
+			break;
+	}
+	
+	$f = 'call_user_func' . ((!$arr) ? '_array' : '');
+	return $f($name, $args);
+}
+
 function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno = 0)
 {
-	global $db;
-	
-	if (isset($db))
-	{
-		$db->sql_close();
-	}
+	sql_close();
 	
 	switch ($code)
 	{
@@ -166,6 +189,10 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 			if ($code == 507)
 			{
 				global $core;
+				
+				if (is_array($errmsg) && isset($errmsg['sql'])) {
+					$errmsg = $errmsg['sql'];
+				}
 				
 				$e_mysql = explode('///', $errmsg);
 				$i_errmsg = str_replace(array("\n", "\t"), array('<br>', '&nbsp;&nbsp;&nbsp;'), implode('<br><br>', $e_mysql));
@@ -376,11 +403,18 @@ function is_lang($k)
 	return isset($user->lang[strtoupper($k)]);
 }
 
-function w($a = '')
-{
-	if (empty($a)) return array();
+function w($a = '', $d = false) {
+	if (!f($a) || !is_string($a)) return array();
 	
-	return explode(' ', $a);
+	$e = explode(' ', $a);
+	if ($d !== false) {
+		foreach ($e as $i => $v) {
+			$e[$v] = $d;
+			unset($e[$i]);
+		}
+	}
+	
+	return $e;
 }
 
 function _hash($v, $t = 1)
@@ -649,17 +683,14 @@ function _space($a)
 	return ($a != '') ? ' ' : '';
 }
 
-function _countries()
-{
+function _countries() {
 	global $core;
 	
-	if (!$countries = $core->cache_load('countries'))
-	{
+	if (!$countries = $core->cache_load('countries')) {
 		$sql = 'SELECT *
 			FROM _countries
 			ORDER BY country_id';
-		if ($countries = $this->_rowset($sql, 'country_id'))
-		{
+		if ($countries = sql_rowset($sql, 'country_id')) {
 			$core->cache_store('countries', $countries);
 		}
 	}
@@ -720,12 +751,8 @@ function _login($message = false, $error = false)
 
 function redirect($url)
 {
-	global $db;
-
-	if (!empty($db))
-	{
-		$db->sql_close();
-	}
+	sql_close();
+	
 	$url = trim($url);
 	
 	// Prevent external domain injection
@@ -855,11 +882,10 @@ function nobody()
 	
 	if (!$a = $core->cache_load('nobody'))
 	{
-		$sql = "SELECT user_id
+		$sql = 'SELECT user_id
 			FROM _members
-			WHERE user_username = 'nobody'";
-		if ($a = $this->_field($sql, 'user_id'))
-		{
+			WHERE user_username = ?';
+		if ($a = sql_field(sql_filter($sql, 'nobody'), 'user_id', '')) {
 			$core->cache_store('nobody', $a);
 		}
 	}
@@ -962,7 +988,7 @@ function set_modified_headers($stamp, $browser)
 
 function _layout($filename, $pagetitle = false, $v_custom = false)
 {
-	global $db, $core, $user, $style, $starttime;
+	global $core, $user, $style, $starttime;
 	
 	// GZip
 	if (strstr($user->browser, 'compatible') || strstr($user->browser, 'Gecko'))
@@ -994,7 +1020,7 @@ function _layout($filename, $pagetitle = false, $v_custom = false)
 		'SITE_TITLE' => $core->v('site_title'),
 		'PAGE_TITLE' => $pagetitle,
 		'S_REDIRECT' => $user->data['session_page'],
-		'F_SQL' => $db->sql_num_queries()
+		'F_SQL' => sql_queries()
 	);
 	if ($v_custom !== false)
 	{
@@ -1005,7 +1031,7 @@ function _layout($filename, $pagetitle = false, $v_custom = false)
 	$style->set_filenames(array(
 		'body' => $filename)
 	);
-	$db->report();
+	report();
 	
 	$mtime = explode(' ', microtime());
 	$v_assign['F_TIME'] = sprintf('%.2f', ($mtime[0] + $mtime[1] - $starttime));
@@ -1013,8 +1039,8 @@ function _layout($filename, $pagetitle = false, $v_custom = false)
 	$style->assign_vars($v_assign);
 	$style->pparse('body');
 	
-	$db->sql_close();
-	exit();
+	sql_close();
+	exit;
 }
 
 function _xfs($mod = false, $wdir = false, $warg = false)
