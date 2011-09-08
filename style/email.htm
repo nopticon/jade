@@ -8,11 +8,16 @@
 		<label for="subject">Fuente de datos</label>
 		<select id="data" name="data" class="w8">
 			<!-- BEGIN row -->
-			<option value="{row.TABLE}">{row.TABLE}</option>
+			<option <!-- IF DATA == row.TABLE -->selected="selected" <!-- ENDIF -->value="{row.TABLE}">{row.TABLE}</option>
 			<!-- END row -->
 		</select>
 	</div>
 	<!-- END tables -->
+	
+	<div class="m_top_tiny field_area float-holder ie-widthfix">
+		<label for="subject">Saludo</label>
+		<input type="text" class="w8" id="gretting" name="gretting" value="{GRETTING}" />
+	</div>
 	
 	<br />
 	
@@ -22,7 +27,7 @@
 	</div>
 	<div class="m_top_tiny field_area float-holder ie-widthfix">
 		<label for="subject">Direcci&oacute;n de Remitente</label>
-		<input type="text" class="w8" id="from" name="from" value="{FROM_ADDRESS}" />
+		<input type="text" class="w8" id="from_address" name="from_address" value="{FROM_ADDRESS}" />
 	</div>
 	
 	<br />

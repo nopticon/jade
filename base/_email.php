@@ -26,37 +26,47 @@ class __email extends xmd {
 		'report' => array(),
 		'total' => array(),
 		'edit' => array(),
-		'valid' => array()
+		'valid' => array(),
+		'table' => array()
 	);
 	
 	function home() {
-		global $user, $style;
+		global $core, $user, $style;
 		
 		$sql = 'SELECT *
 			FROM _email
 			WHERE email_active = 1
+			ORDER BY email_id
 			LIMIT 1';
 		if (!$email = sql_fieldrow($sql)) {
-			$this->e('No queue emails.');
+			$this->e('No queue.');
 		}
 		
 		set_time_limit(0);
 		
-		if (!$email['email_start']) {
-			$sql = 'UPDATE _email SET email_start = ?
-				WHERE email_id = ?';
-			sql_query(sql_filter($sql, time(), $email['email_id']));
+		if (!$email['email_batch']) {
+			$email['email_batch'] = 200;
 		}
 		
 		$sql = 'SELECT *
 			FROM ??
 			ORDER BY address_id
 			LIMIT ??, ??';
-		$members = sql_rowset(sql_filter($sql, TABLE, $email['email_last'], $email['email_batch']));
+		if ($members = sql_rowset(sql_filter($sql, $email['email_data'], $email['email_last'], $email['email_batch']))) {
+			if (!$email['email_start']) {
+				$sql = 'UPDATE _email SET email_start = ?
+					WHERE email_id = ?';
+				sql_query(sql_filter($sql, time(), $email['email_id']));
+			}
+		}
 		
 		$i = 0;
+		$sent_to = array();
+		
 		foreach ($members as $row) {
-			if (!preg_match('/^[a-z0-9\.\-_\+]+@[a-z0-9\-_]+\.([a-z0-9\-_]+\.)*?[a-z]+$/is', $row['address_account'])) {
+			$address_account = trim($row['address_account']);
+			
+			if (!preg_match('/^[a-z0-9\.\-_\+]+@[a-z0-9\-_]+\.([a-z0-9\-_]+\.)*?[a-z]+$/is', $address_account)) {
 				continue;
 			}
 			
@@ -66,59 +76,68 @@ class __email extends xmd {
 			}
 			
 			$emailer->use_template('mass');
-			
 			$emailer->format('html');
+			
 			$emailer->from($email['email_from'] . ' <' . $email['email_from_address'] . '>');
 			$emailer->set_subject(entity_decode($email['email_subject']));
-			$emailer->email_address(trim($row['address_account']));
+			$emailer->email_address($address_account);
 			
-			/*$hi = 'o';
-			if (strtolower($row['address_genre']) == 'Femenino') {
-				$hi = 'a';
-			}
-			 * */
+			$name_compose = '';
 			
-			$address_name = '';
-			
-			/*
-			$address_name = 'Estimad' . $hi;
-			
-			if (!empty($row['address_name']) || !empty($row['address_last']))
-			{
-				if (!empty($row['address_name']))
-				{
-					$address_name .= ' ' . ucwords(strtolower($row['address_name']));
+			if (isset($row['address_name'])) {
+				$row['address_name'] = preg_replace('/\s\s+/', ' ', $row['address_name']);
+				$name_compose = ucwords(strtolower(trim($row['address_name'])));
+				
+				if (isset($row['address_last']) && !empty($row['address_last'])) {
+					$row['address_last'] = preg_replace('/\s\s+/', ' ', $row['address_last']);
+					$name_compose .= ' ' . ucwords(strtolower(trim($row['address_last'])));
 				}
 				
-				if (!empty($row['address_last']))
-				{
-					$address_name .= ' ' . ucwords(strtolower($row['address_last']));
+				if (!empty($name_compose)) {
+					$name_gretting = '';
+					
+					if (isset($row['address_gender']) && !empty($row['address_gender'])) {
+						switch ($row['address_gender']) {
+							case 'Femenino':
+								$name_by = 'a';
+								break;
+							case 'Masculino':
+								$name_by = 'o';
+								break;
+							default:
+								$name_gretting = $core->config['email_gretting'];
+								break;
+						}
+					} else {
+						if (strpos($name_compose, 'Sra.') !== false || strpos($name_compose, 'Srta.') !== false) {
+							$name_by = 'a';
+						} else if (strpos($name_compose, 'Sr.') !== false) {
+							$name_by = 'o';
+						} else {
+							$name_gretting = $core->config['email_gretting'];
+						}
+					}
+					
+					if (empty($email['email_gretting'])) {
+						$name_gretting = $core->config['email_gretting'];
+					}
+					
+					if (!empty($name_gretting)) {
+						$name_compose = $name_gretting . ' ' . $name_compose;
+					} elseif (!empty($name_by)) {
+						if (strpos($email['email_gretting'], '*') !== false) {
+							$name_compose = str_replace('*', $name_by, $email['email_gretting']) . ' ' . $name_compose;
+						}
+					}
+					
+					if (!empty($name_compose)) {
+						$name_compose .= ', ';
+					}
 				}
-			}*/
-			
-			//$address_name .= ',';
-			
-			if (!empty($row['address_name'])) {
-				$person = $row['address_name'];
-				
-				$hi = '';
-				if (strpos($person, 'Sr.') !== false) {
-					$hi = 'o';
-				}
-				
-				if (strpos($person, 'Srta.') !== false || strpos($person, 'Sra.') !== false) {
-					$hi = 'a';
-				}
-				
-				if (empty($hi)) {
-					$hi = 'o';
-				}
-				
-				$address_name = 'Estimad' . $hi . ' ' . $person . ',';
 			}
 			
 			$emailer->assign_vars(array(
-				'USERNAME' => $address_name,
+				'USERNAME' => $name_compose,
 				'MESSAGE' => entity_decode($email['email_message']))
 			);
 			$emailer->send();
@@ -126,7 +145,7 @@ class __email extends xmd {
 			
 			$sql = 'UPDATE ?? SET address_sent = ?
 				WHERE address_id = ?';
-			sql_query(sql_filter($sql, $email['email_data'], time(), $row['address_sent']));
+			sql_query(sql_filter($sql, $email['email_data'], time(), $row['address_id']));
 			
 			$i++;
 			
@@ -134,16 +153,51 @@ class __email extends xmd {
 				WHERE email_id = ?';
 			sql_query(sql_filter($sql, $i, $email['email_id']));
 			
-			sleep(2);
+			$sent_to[] = $row['address_account'];
+			
+			sleep(1);
 		}
 		
-		if ($i == count($members)) {
+		$sql = 'SELECT COUNT(address_id) AS total
+			FROM ??
+			WHERE address_sent = 0
+			ORDER BY address_id';
+		if (!sql_field(sql_filter($sql, $email['email_data']), 'total', 0)) {
 			$sql = 'UPDATE _email SET email_active = 0, email_end = ?
 				WHERE email_id = ?';
 			sql_query(sql_filter($sql, time(), $email['email_id']));
+			
+			return $this->e('Finished sending ' . $i . ' emails.');
 		}
 		
 		return $this->e('Processed ' . $i . ' emails.');
+	}
+	
+	public function table() {
+		return $this->method();
+	}
+	
+	public function _table_home() {
+		$v = $this->__(array('table'));
+		
+		if (empty($v['table'])) {
+			exit;
+		}
+		
+		$table_name = '_email_' . strtolower(trim($v['table']));
+		
+		$sql = 'CREATE TABLE IF NOT EXISTS ?? (
+			address_id mediumint(5) NOT NULL AUTO_INCREMENT,
+			address_name varchar(200) NOT NULL,
+			address_last varchar(200) NOT NULL,
+			address_account varchar(200) NOT NULL,
+			address_gender varchar(200) NOT NULL,
+			address_sent int(11) NOT NULL,
+			PRIMARY KEY (address_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=latin1';
+		sql_query(sql_filter($sql, $table_name));
+		
+		$this->e('Table ' . $table_name . ' was created.');
 	}
 	
 	function valid() {
@@ -184,10 +238,10 @@ class __email extends xmd {
 		}
 		
 		$sql = 'SELECT *
-			FROM ' . EMAIL_TABLE . '
+			FROM ??
 			ORDER BY address_id
 			LIMIT ??, ??';
-		$members = sql_rowset(sql_filter($sql, $email['email_last'], $email['email_batch']));
+		$members = sql_rowset(sql_filter($sql, $email['email_data'], $email['email_last'], $email['email_batch']));
 		
 		$i = 0;
 		foreach ($members as $row) {
@@ -204,7 +258,7 @@ class __email extends xmd {
 			
 			flush();
 			
-			sleep(2);
+			sleep(1);
 			
 			$i++;
 		}
@@ -230,7 +284,7 @@ class __email extends xmd {
 			$this->e('El registro de email no existe.');
 		}
 		
-		foreach (w('lastvisit start end') as $k) {
+		foreach (w('start end') as $k) {
 			$email['email_' . $k] = ($email['email_' . $k]) ? $user->format_date($email['email_' . $k]) : '';
 		}
 		
@@ -248,8 +302,10 @@ class __email extends xmd {
 	function _create_home() {
 		global $style;
 		
+		$v_fields = array('data', 'batch', 'gretting', 'from', 'from_address', 'subject', 'message');
+		
 		if (_button()) {
-			$v = $this->__(array('subject', 'message', 'lastvisit' => 0));
+			$v = $this->__($v_fields);
 			
 			$sql = 'SELECT email_id
 				FROM _email
@@ -260,6 +316,7 @@ class __email extends xmd {
 			}
 			
 			$v['active'] = 1;
+			$v['data'] = '_email_' . $v['data'];
 			$v['message'] = str_replace(array('&lt;', '&gt;', '&quot;'), array('<', '>', '"'), $v['message']);
 			
 			$sql = 'INSERT INTO _email' . sql_build('INSERT', prefix('email', $v));
@@ -288,11 +345,11 @@ class __email extends xmd {
 			}
 		}
 		
-		$sv = array(
-			'SUBJECT' => '',
-			'MESSAGE' => '',
-			'LASTVISIT' => ''
-		);
+		$sv = array();
+		foreach ($v_fields as $field) {
+			$sv[strtoupper($field)] = '';
+		}
+		
 		$this->as_vars($sv);
 	}
 	
@@ -308,15 +365,19 @@ class __email extends xmd {
 		$sql = 'SELECT *
 			FROM _email
 			WHERE email_id = ?';
+		
+		$email = sql_fieldrow(sql_filter($sql, $v['id']));
 		if (!$email = sql_fieldrow(sql_filter($sql, $v['id']))) {
 			$this->e('El registro de email no existe.');
 		}
 		
+		$v_fields = array('data', 'batch', 'gretting', 'from', 'from_address', 'subject', 'message');
+		
 		if (_button()) {
-			$v = array_merge($v, $this->__(array('subject', 'message', 'lastvisit')));
+			$v = array_merge($v, $this->__($v_fields));
 			
-			$vs = explode(' ', $v['lastvisit']);
-			$v['lastvisit'] = mktime(0, 0, 0, $vs[1], $vs[0], $vs[2]);
+			$v['data'] = '_email_' . $v['data'];
+			$v['message'] = str_replace(array('&lt;', '&gt;', '&quot;'), array('<', '>', '"'), $v['message']);
 			
 			$sql = 'UPDATE _email SET ??
 				WHERE email_id = ?';
@@ -325,13 +386,31 @@ class __email extends xmd {
 			$this->e('El mensaje programado fue actualizado.');
 		}
 		
-		$lastvisit = $user->format_date($email['email_lastvisit'], 'j n Y');
+		$tables = sql_rowset('SHOW TABLES', false, false, false, MYSQL_NUM);
 		
-		$sv = array(
-			'SUBJECT' => $email['email_subject'],
-			'MESSAGE' => $email['email_message'],
-			'LASTVISIT' => $lastvisit
-		);
+		$i = 0;
+		foreach ($tables as $table) {
+			$table = $table[0];
+			$search = '_email_';
+			
+			if (preg_match('#' . $search . '#i', $table)) {
+				if (!$i) {
+					$style->assign_block_vars('tables', array());
+				}
+				
+				$style->assign_block_vars('tables.row', array(
+					'TABLE' => str_replace($search, '', $table))
+				);
+				
+				$i++;
+			}
+		}
+		
+		$sv = array();
+		foreach ($v_fields as $field) {
+			$sv[strtoupper($field)] = $email['email_' . $field];
+		}
+		
 		$this->as_vars($sv);
 	}
 	
@@ -347,14 +426,17 @@ class __email extends xmd {
 		if ($v['id']) {
 			$sql = 'SELECT *
 				FROM _email
-				WHERE email_id = ' . (int) $v['id'];
-			if (!$email = sql_fieldrow($sql)) {
+				WHERE email_id = ?';
+			if (!$email = sql_fieldrow(sql_filter($sql, $v['id']))) {
 				$this->e('El registro de email no existe.');
 			}
 			
 			$sql = 'UPDATE _email SET email_active = 1, email_start = 0, email_end = 0, email_last = 0
 				WHERE email_id = ?';
 			sql_query(sql_filter($sql, $v['id']));
+			
+			$sql = 'UPDATE ?? SET address_sent = 0';
+			sql_query(sql_filter($sql, $email['email_data']));
 			
 			$this->e('El registro de email fue reiniciado.');
 		}
@@ -366,7 +448,7 @@ class __email extends xmd {
 		
 		$response = '';
 		foreach ($emails as $row) {
-			$response .= '<a href="/nijad/email/x1:clear.id:' . $row['email_id'] . '">' . $row['email_subject'] . '</a><br />';
+			$response .= '<a href="/jade/email/x1:clear.id:' . $row['email_id'] . '">' . $row['email_subject'] . '</a><br />';
 		}
 		
 		$this->e($response);
@@ -404,14 +486,10 @@ class __email extends xmd {
 		}
 		
 		$sql = 'SELECT COUNT(address_id) AS total
-			FROM _email_' . $email['email_data'];
-		$total = sql_field($sql, 'total', 0);
+			FROM ??';
+		$total = sql_field(sql_filter($sql, $email['email_data']), 'total', 0);
 		
-		$sql = 'SELECT COUNT(address_id) AS total
-			FROM _email_address';
-		$all = sql_field($sql, 'total', 0);
-		
-		$this->e($total . ' . ' . $all);
+		$this->e($total);
 	}
 }
 

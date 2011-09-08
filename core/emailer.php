@@ -193,10 +193,11 @@ class emailer
 		$cc = (isset($this->addresses['cc']) && count($this->addresses['cc'])) ? implode(', ', $this->addresses['cc']) : '';
 		$bcc = (isset($this->addresses['bcc']) && count($this->addresses['bcc'])) ? implode(', ', $this->addresses['bcc']) : '';
 		
-		$domain_message = 'claro.com.sv';
+		$domain_message = explode('@', $this->from);
+		$domain_message = $domain_message[1];
 
 		// Build header
-		$this->extra_headers = (($this->reply_to != '') ? "Reply-to: $this->reply_to\n" : '') . (($this->from != '') ? "From: $this->from\n" : "From: " . $core->v('default_email') . "\n") . "Return-Path: " . $core->v('default_email') . "\nMessage-ID: <" . md5(uniqid(time())) . "@" . $domain_message . ">\nMIME-Version: 1.0\nContent-type: text/" . $this->eformat . "; charset=" . $this->encoding . "\nContent-transfer-encoding: 8bit\nDate: " . date('r', time()) . "\nX-Priority: 2\nX-MSMail-Priority: High\n" . $this->extra_headers . (($cc != '') ? "Cc: $cc\n" : '')  . (($bcc != '') ? "Bcc: $bcc\n" : ''); 
+		$this->extra_headers = (($this->reply_to != '') ? "Reply-to: $this->reply_to\n" : '') . (($this->from != '') ? "From: $this->from\n" : "From: " . $core->v('default_email') . "\n") . "Return-Path: " . $this->from . "\nMessage-ID: <" . md5(uniqid(time())) . "@" . $domain_message . ">\nMIME-Version: 1.0\nContent-type: text/" . $this->eformat . "; charset=" . $this->encoding . "\nContent-transfer-encoding: 8bit\nDate: " . date('r', time()) . "\nX-Priority: 2\nX-MSMail-Priority: High\n" . $this->extra_headers . (($cc != '') ? "Cc: $cc\n" : '')  . (($bcc != '') ? "Bcc: $bcc\n" : ''); 
 
 		// Send message ... removed $this->encode() from subject for time being
 		$empty_to_header = ($to == '') ? true : false;
@@ -207,11 +208,12 @@ class emailer
 			$this->msg = html_entity_decode($this->msg);
 		}
 		
-		$result = @mail($to, $this->subject, preg_replace("#(?<!\r)\n#s", "\n", $this->msg), $this->extra_headers, "-f{$core->v('default_email')}");
+		$result = @mail($to, $this->subject, preg_replace("#(?<!\r)\n#s", "\n", $this->msg), $this->extra_headers, "-f{$this->from}");
 		
 		// Did it work?
 		if (!$result)
 		{
+			return false;
 			//trigger_error('Failed sending email :: PHP :: ' . $result);
 		}
 		

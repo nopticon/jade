@@ -717,14 +717,12 @@ class user extends session
 	}
 }
 
-class core
-{
+class core {
 	var $cache = array();
 	var $config = array();
 	var $cache_dir;
 	
-	function core()
-	{
+	public function __construct() {
 		$sql = 'SELECT *
 			FROM _config';
 		$this->config = sql_rowset($sql, 'config_name', 'config_value');
@@ -733,16 +731,14 @@ class core
 		$this->cache_dir = XFS . 'core/cache/';
 	}
 	
-	function update_config($config_name, $config_value)
-	{
+	public function update_config($config_name, $config_value) {
 		$update = array('config_value' => $config_value);
 		
 		$sql = 'UPDATE _config SET ??
 			WHERE config_name = ?';
 		sql_query(sql_filter($sql, sql_build('UPDATE', $update), $config_name));
 		
-		if (!sql_affectedrows() && !isset($this->config[$config_name]))
-		{
+		if (!sql_affectedrows() && !isset($this->config[$config_name])) {
 			$update['config_name'] = $config_name;
 			
 			$sql = 'INSERT INTO _config' . sql_build('INSERT', $update);
@@ -752,25 +748,21 @@ class core
 		$this->config[$config_name] = $config_value;
 	}
 	
-	function v($k, $v = false)
-	{
+	public function v($k, $v = false) {
 		$a = (isset($this->config[$k])) ? $this->config[$k] : false;
 		
-		if ($v !== false)
-		{
+		if ($v !== false) {
 			$update = array('config_value' => $v);
 			
-			if ($a !== false)
-			{
+			if ($a !== false) {
 				$sql = 'UPDATE _config SET ??
 					WHERE config_name = ?';
 				$sql = sql_filter($sql, sql_build('UPDATE', $update), $k);
-			}
-			else
-			{
+			} else {
 				$update['config_name'] = $k;
 				$sql = 'INSERT INTO _config' . sql_build('INSERT', $update);
 			}
+			
 			sql_query($sql);
 			$this->config[$k] = $a = $v;
 		}
@@ -778,24 +770,19 @@ class core
 		return $a;
 	}
 	
-	function cache_crypt($str)
-	{
+	public function cache_crypt($str) {
 		return sha1($str);
 	}
 	
-	function cache_load($var)
-	{
+	public function cache_load($var) {
 		$filename = $this->cache_dir . $this->cache_crypt($var);
 		
-		if (@file_exists($filename))
-		{
-			if (!@include($filename))
-			{
+		if (@file_exists($filename)) {
+			if (!@include($filename)) {
 				return $this->cache_unload($var);
 			}
 			
-			if (!empty($this->cache[$var]))
-			{
+			if (!empty($this->cache[$var])) {
 				return $this->cache[$var];
 			}
 			
@@ -805,13 +792,11 @@ class core
 		return;
 	}
 	
-	function cache_unload()
-	{
+	public function cache_unload() {
 		foreach (func_get_args() as $var)
 		{
 			$cache_filename = $this->cache_dir . $this->cache_crypt($var);
-			if (@file_exists($cache_filename))
-			{
+			if (@file_exists($cache_filename)) {
 				@unlink($cache_filename);
 			}
 		}
@@ -819,14 +804,12 @@ class core
 		return;
 	}
 	
-	function cache_store($var, $data)
-	{
+	public function cache_store($var, $data) {
 		$this->cache_unload($var);
 		$filename = $this->cache_dir . $this->cache_crypt($var);
 		
 		$fp = @fopen($filename, 'w');
-		if ($fp)
-		{
+		if ($fp) {
 			$file_buffer = '<?php $' . 'this->cache[\'' . $var . '\'] = ' . ((is_array($data)) ? $this->format($data) : "'" . str_replace("'", "\\'", str_replace('\\', '\\\\', $data)) . "'") . '; ?>';
 			
 			@flock($fp, LOCK_EX);
@@ -843,50 +826,38 @@ class core
 	//
 	// Borrowed from phpBB 2.2 : acm_file.php
 	//
-	function format($data)
-	{
+	public function format($data) {
 		$lines = array();
-		foreach ($data as $k => $v)
-		{
-			if (is_array($v))
-			{
+		foreach ($data as $k => $v) {
+			if (is_array($v)) {
 				$lines[] = "'$k' => " . $this->format($v);
-			}
-			elseif (is_int($v))
-			{
+			} elseif (is_int($v)) {
 				$lines[] = "'$k' => $v";
-			}
-			elseif (is_bool($v))
-			{
+			} elseif (is_bool($v)) {
 				$lines[] = "'$k' => " . (($v) ? 'TRUE' : 'FALSE');
-			}
-			else
-			{
+			} else {
 				$lines[] = "'$k' => '" . str_replace("'", "\\'", str_replace('\\', '\\\\', $v)) . "'";
 			}
 		}
 		return 'array(' . implode(',', $lines) . ')';
 	}
 	
-	function auth($v)
-	{
+	public function auth($v) {
 		global $user;
 		
 		return $user->auth_get($v);
 	}
-	function select($name, $ary)
-	{
+	
+	public function select($name, $ary) {
 		$select = '';
-		foreach ($ary as $k => $v)
-		{
+		foreach ($ary as $k => $v) {
 			$select .= '<option value="' . $k . '">' . $v . '</option>';
 		}
 		
 		return '<select name="' . $name . '">' . $select . '</select>';
 	}
 	
-	function yes_no($name, $selected = 1)
-	{
+	public function yes_no($name, $selected = 1) {
 		global $user;
 		
 		$selected = (int) $selected;
