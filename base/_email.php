@@ -45,7 +45,7 @@ class __email extends xmd {
 		set_time_limit(0);
 		
 		if (!$email['email_batch']) {
-			$email['email_batch'] = 200;
+			$email['email_batch'] = 50;
 		}
 		
 		$sql = 'SELECT *
@@ -67,6 +67,10 @@ class __email extends xmd {
 			$address_account = trim($row['address_account']);
 			
 			if (!preg_match('/^[a-z0-9\.\-_\+]+@[a-z0-9\-_]+\.([a-z0-9\-_]+\.)*?[a-z]+$/is', $address_account)) {
+				continue;
+			}
+			
+			if ($row['address_sent']) {
 				continue;
 			}
 			
@@ -149,9 +153,9 @@ class __email extends xmd {
 			
 			$i++;
 			
-			$sql = 'UPDATE _email SET email_last = ?
+			$sql = 'UPDATE _email SET email_last = email_last + 1
 				WHERE email_id = ?';
-			sql_query(sql_filter($sql, $i, $email['email_id']));
+			sql_query(sql_filter($sql, $email['email_id']));
 			
 			$sent_to[] = $row['address_account'];
 			
