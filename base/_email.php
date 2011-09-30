@@ -53,9 +53,10 @@ class __email extends xmd {
 		
 		$sql = 'SELECT *
 			FROM ??
+			WHERE address_sent = 0
 			ORDER BY address_id
-			LIMIT ??, ??';
-		if ($members = sql_rowset(sql_filter($sql, $email['email_data'], $email['email_last'], $email['email_batch']))) {
+			LIMIT ??';
+		if ($members = sql_rowset(sql_filter($sql, $email['email_data'], $email['email_batch']))) {
 			if (!$email['email_start']) {
 				$sql = 'UPDATE _email SET email_start = ?
 					WHERE email_id = ?';
@@ -70,10 +71,10 @@ class __email extends xmd {
 			$address_account = trim($row['address_account']);
 			
 			if (!preg_match('/^[a-z0-9\.\-_\+]+@[a-z0-9\-_]+\.([a-z0-9\-_]+\.)*?[a-z]+$/is', $address_account)) {
-				continue;
-			}
-			
-			if ($row['address_sent']) {
+				$sql = 'UPDATE ?? SET address_sent = ?
+					WHERE address_id = ?';
+				sql_query(sql_filter($sql, $email['email_data'], 1, $row['address_id']));
+				
 				continue;
 			}
 			
