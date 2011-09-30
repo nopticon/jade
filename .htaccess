@@ -7,6 +7,7 @@ RewriteRule ^.*$ - [F,L]
 
 RewriteRule ^$ index.php?module=home&args= [nc]
 RewriteRule ^(ext)/([0-9a-z\_\-]+)\.(js|css)$ index.php?module=$1&args=f:$2.e:$3 [nc]
+RewriteRule ^i([a-z0-9]+)-([a-z0-9]+).jpg$ index.php?module=email&args=x1:rate.img:$1.rec:$2 [nc]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

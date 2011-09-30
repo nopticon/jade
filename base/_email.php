@@ -27,7 +27,10 @@ class __email extends xmd {
 		'total' => array(),
 		'edit' => array(),
 		'valid' => array(),
-		'table' => array()
+		'table' => array(),
+		'rate' => array(),
+		'encode' => array(),
+		'image' => array()
 	);
 	
 	function home() {
@@ -36,7 +39,7 @@ class __email extends xmd {
 		$sql = 'SELECT *
 			FROM _email
 			WHERE email_active = 1
-			ORDER BY email_id
+			ORDER BY email_priority, email_id
 			LIMIT 1';
 		if (!$email = sql_fieldrow($sql)) {
 			$this->e('No queue.');
@@ -140,9 +143,19 @@ class __email extends xmd {
 				}
 			}
 			
+			$email_message = entity_decode($email['email_message']);
+			
+			if (strpos($email_message, '<system_image>') !== false) {
+				$enc_email_id = encode($email['email_id']);
+				$enc_address_id = encode($row['address_id']);
+				
+				$system_image_link = _link('i' . $enc_email_id . '-' . $enc_address_id . '.jpg', false, false);
+				$email_message = str_replace('<system_image>', $system_image_link, $email_message);
+			}
+			
 			$emailer->assign_vars(array(
 				'USERNAME' => $name_compose,
-				'MESSAGE' => entity_decode($email['email_message']))
+				'MESSAGE' => $email_message)
 			);
 			$emailer->send();
 			$emailer->reset();
@@ -197,6 +210,7 @@ class __email extends xmd {
 			address_account varchar(200) NOT NULL,
 			address_gender varchar(200) NOT NULL,
 			address_sent int(11) NOT NULL,
+			address_viewed int(11) NOT NULL,
 			PRIMARY KEY (address_id)
 		) ENGINE=InnoDB DEFAULT CHARSET=latin1';
 		sql_query(sql_filter($sql, $table_name));
@@ -494,6 +508,81 @@ class __email extends xmd {
 		$total = sql_field(sql_filter($sql, $email['email_data']), 'total', 0);
 		
 		$this->e($total);
+	}
+
+	public function encode() {
+		$v = $this->__(array('mode' => 'encode', 'encode' => ''));
+		extract($v);
+		
+		echo $mode($encode);
+		exit;
+	}
+
+	public function rate() {
+		return $this->method();
+	}
+	
+	public function _rate_home() {
+		$v = $this->__(array('img' => '', 'rec' => ''));
+		
+		$v2 = w();
+		foreach ($v as $kv => $vv) {
+			$v2[$kv] = decode($vv);
+		}
+		
+		$address_id = 0;
+		
+		$sql = 'SELECT *
+			FROM _email
+			WHERE email_id = ?';
+		if ($email = sql_fieldrow(sql_filter($sql, $v2['img']))) {
+			$sql = 'SELECT address_id
+				FROM ??
+				WHERE address_id = ?';
+			$address_id = sql_field(sql_filter($sql, $email['email_data'], $v2['rec']), 'address_id', 0);
+		}
+		
+		$filepath = XFS . 'space/emails/' . $v2['img'] . '.jpg';
+		
+		if (!@file_exists($filepath) || !$email || !$address_id) {
+			header('Content-Type: text/html; charset=iso-8859-1');
+			header("HTTP/1.1 404 Not Found");
+			
+			echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"> 
+<html><head> 
+<title>404 Not Found</title> 
+</head><body> 
+<h1>Not Found</h1> 
+<p>The requested URL /i' . $v['img'] . '-' . $v['rec'] . '.jpg was not found on this server.</p> 
+</body></html> ';
+			exit;
+		}
+		
+		$sql = 'UPDATE ?? SET address_viewed = ?
+			WHERE address_id = ?';
+		sql_query(sql_filter($sql, $email['email_data'], time(), $v2['rec']));
+		
+		header('Content-Type: image/jpeg');
+		@readfile($filepath);
+		
+		exit;
+	}
+	
+	public function image() {
+		return $this->method();
+	}
+	
+	public function _image_home() {
+		$v = $this->__(array('email'));
+		extract($v);
+		
+		$email = encode($email);
+		$address = encode(1);
+		
+		$system_image_link = _link('i' . $email . '-' . $address . '.jpg', false, false);
+		
+		echo $system_image_link;
+		exit;
 	}
 }
 
