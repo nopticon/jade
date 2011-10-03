@@ -1,24 +1,3 @@
--- phpMyAdmin SQL Dump
--- version 3.4.3deb1.natty~ppa.1
--- http://www.phpmyadmin.net
---
--- Servidor: localhost
--- Tiempo de generación: 07-09-2011 a las 18:30:11
--- Versión del servidor: 5.1.54
--- Versión de PHP: 5.3.5-1ubuntu7.2
-
-SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-
---
--- Base de datos: `_nijad`
---
 
 -- --------------------------------------------------------
 
@@ -42,7 +21,7 @@ INSERT INTO `_config` (`config_name`, `config_value`) VALUES
 ('cookie_name', 'ucs'),
 ('cookie_path', '/'),
 ('cron_enabled', '1'),
-('default_email', 'lazurdia@tppemarketing.com'),
+('default_email', ''),
 ('default_lang', 'es'),
 ('domain', 'localhost'),
 ('mail_port', '110'),
@@ -82,57 +61,6 @@ CREATE TABLE IF NOT EXISTS `_email` (
   PRIMARY KEY (`email_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;
 
---
--- Volcado de datos para la tabla `_email`
---
-
-INSERT INTO `_email` (`email_id`, `email_active`, `email_data`, `email_from`, `email_from_address`, `email_subject`, `email_message`, `email_lastvisit`, `email_last`, `email_start`, `email_end`) VALUES
-(2, 0, '', '', '', 'test', 'here <a href="#">this link</a>', 0, 2, 1312993562, 1312994021),
-(3, 0, '', '', '', 'TURBONETT MOVIL POSPAGO A TAN SOLO $7.50 *', '<a href="http://www.claro.com.sv/Movil/Promociones/Turbonett%20Movil.aspx">http://www.claro.com.sv/Movil/Promociones/Turbonett%20Movil.aspx</a><br /><br /><center><a href="http://www.claro.com.sv/Movil/Promociones/Turbonett%20Movil.aspx"><img src="http://www.telefoniaguatemala.com/turbonett-3meses.jpg" alt="" /></a></center>', 0, 3, 1312994715, 0),
-(4, 0, '', '', '', 'NAVEGA , MANTENTE SUSCRITO Y GANA LCD DE 22”', '<center><a href="http://www.claro.com.sv/Movil/Promociones/Navega%20y%20Gana.aspx">NAVEGA , MANTENTE SUSCRITO Y GANA LCD DE 22"</a></center><br /><br /><center><a href="http://www.claro.com.sv/Movil/Promociones/Navega%20y%20Gana.aspx"><img src="http://www.telefoniaguatemala.com/lcd-22.jpg" alt="" /></a></center>', 0, 4, 1313781191, 1315007005),
-(5, 0, '', '', '', 'ELLOS ENVIARON Y GANARON!', '<center><a href="http://www.claro.com.sv/Movil/Promociones/Gana%20con%20Claro.aspx">ELLOS ENVIARON Y GANARON!</a></center><br /><br /><center><a href="http://www.claro.com.sv/Movil/Promociones/Gana%20con%20Claro.aspx"><img src="http://ideasclaro.claro.com.sv/images/stories/super-por-anio.jpg" alt="" /></a></center>', 0, 715, 1315007301, 0);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `_email_address`
---
-
-CREATE TABLE IF NOT EXISTS `_email_address` (
-  `address_id` mediumint(5) NOT NULL AUTO_INCREMENT,
-  `address_name` varchar(200) NOT NULL,
-  `address_account` varchar(200) NOT NULL,
-  PRIMARY KEY (`address_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `_email_address_send2`
---
-
-CREATE TABLE IF NOT EXISTS `_email_address_send2` (
-  `address_id` mediumint(5) NOT NULL AUTO_INCREMENT,
-  `address_name` varchar(200) NOT NULL,
-  `address_last` varchar(200) NOT NULL,
-  `address_account` varchar(200) NOT NULL,
-  `address_genre` varchar(200) NOT NULL,
-  PRIMARY KEY (`address_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `_email_send_3`
---
-
-CREATE TABLE IF NOT EXISTS `_email_send_3` (
-  `address_id` mediumint(5) NOT NULL AUTO_INCREMENT,
-  `address_name` varchar(200) NOT NULL,
-  `address_account` varchar(200) NOT NULL,
-  PRIMARY KEY (`address_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
 -- --------------------------------------------------------
 
 --
@@ -153,10 +81,7 @@ CREATE TABLE IF NOT EXISTS `_email_test` (
 --
 
 INSERT INTO `_email_test` (`address_id`, `address_name`, `address_last`, `address_account`, `address_genre`) VALUES
-(1, 'Guillermo', 'Azurdia', 'info@nopticon.com', ''),
-(2, 'NTC', '', 'nopticon@gmail.com', ''),
-(3, 'Srta. Misshell', '', 'core@nopticon.com', ''),
-(4, 'Sandra', 'Lopez', 'slopez@tppemarketing.com', 'Femenino');
+(1, 'Guillermo', 'Azurdia', 'info@nopticon.com', '');
 
 -- --------------------------------------------------------
 
@@ -174,14 +99,6 @@ CREATE TABLE IF NOT EXISTS `_groups` (
   `group_color` varchar(6) NOT NULL,
   PRIMARY KEY (`group_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
-
---
--- Volcado de datos para la tabla `_groups`
---
-
-INSERT INTO `_groups` (`group_id`, `group_name`, `group_email`, `group_email_template`, `group_auth`, `group_mod`, `group_color`) VALUES
-(1, 'Grupo 1', 'g1', '', '', 2, '3366FF'),
-(2, 'Grupo 2', 'g2', '', '', 2, 'F5B800');
 
 -- --------------------------------------------------------
 
@@ -251,7 +168,7 @@ CREATE TABLE IF NOT EXISTS `_members` (
 
 INSERT INTO `_members` (`user_id`, `user_type`, `user_active`, `user_internal`, `user_mtype`, `user_login`, `user_username`, `user_password`, `user_lastvisit`, `user_auto_session`, `user_current_ip`, `user_lastpage`, `user_firstname`, `user_lastname`, `user_name_show`, `user_email`, `user_gender`, `user_date`, `user_dateformat`, `user_timezone`, `user_dst`, `user_login_tries`, `user_stats`) VALUES
 (1, 0, 0, 1, 0, '', 'nobody', 'nobody', 0, 0, '', '', 'nobody', 'nobody', '', '', 0, 0, 'd M Y H:i', -6, 0, 0, 1),
-(2, 3, 1, 0, 0, 'adm', 'adm', '8929b61a0e6b985943edc6d13c9992dc661e4f09', 1307986639, 0, '', 'http://localhost/sntc/tts/ticket/x1:create/', 'Administrador', '', '', '', 0, 0, 'd M Y H:i', -6, 0, 0, 0);
+(2, 3, 1, 0, 0, 'adm', 'adm', '8929b61a0e6b985943edc6d13c9992dc661e4f09', 1307986639, 0, '', '', 'Administrador', '', '', '', 0, 0, 'd M Y H:i', -6, 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -306,7 +223,3 @@ CREATE TABLE IF NOT EXISTS `_sessions` (
   `session_browser` varchar(255) NOT NULL,
   `session_page` varchar(100) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

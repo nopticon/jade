@@ -30,7 +30,9 @@ class __email extends xmd {
 		'table' => array(),
 		'rate' => array(),
 		'encode' => array(),
-		'image' => array()
+		'image' => array(),
+		'stats' => array(),
+		'servers' => array()
 	);
 	
 	function home() {
@@ -510,7 +512,123 @@ class __email extends xmd {
 		
 		$this->e($total);
 	}
+	
+	function stats() {
+		return $this->method();
+	}
+	
+	function _stats_home() {
+		$v = $this->__(array('id' => 0));
+		
+		$sql = 'SELECT *
+			FROM _email
+			WHERE email_id = ?';
+		if (!$email = sql_fieldrow(sql_filter($sql, $v['id']))) {
+			$this->e('El registro de email no existe.');
+		}
+		
+		$response = new stdClass();
+		
+		$sql = 'SELECT COUNT(address_id) AS total
+			FROM ??';
+		$response->total_emails = sql_field(sql_filter($sql, $email['email_data']), 'total', 0);
+		
+		$sql = 'SELECT COUNT(address_id) AS total
+			FROM ??
+			WHERE address_sent = 1';
+		$response->undelivered = sql_field(sql_filter($sql, $email['email_data']), 'total', 0);
+		
+		$sql = 'SELECT COUNT(address_id) AS total
+			FROM ??
+			WHERE address_sent > 1';
+		$response->delivered = sql_field(sql_filter($sql, $email['email_data']), 'total', 0);
+		
+		$sql = 'SELECT COUNT(address_id) AS total
+			FROM ??
+			WHERE address_viewed > 0';
+		$response->viewed = sql_field(sql_filter($sql, $email['email_data']), 'total', 0);
+		
+		$response->openrate = ($response->viewed / $response->delivered) * 100;
+		
+		echo json_encode($response);
+		exit;
+	}
+	
+	function servers() {
+		return $this->method();
+	}
+	
+	function _servers_home() {
+		$v = $this->__(array('id' => ''));
+		
+		$sql = 'SELECT *
+			FROM _servers
+			ORDER BY server_name';
+		$servers = sql_rowset($sql);
+		
+		$ids = explode('-', $v['id']);
+		
+		$legend = array(
+			'total_emails' => 'Envios programados',
+			'undelivered' => 'No entregados',
+			'delivered' => 'Correos entregados',
+			'viewed' => 'Correos leidos',
+			'openrate' => 'Open Rate'
+		);
+		
+		$total_all = new stdClass();
+		
+		foreach ($legend as $legend_k => $legend_v) {
+			$total_all->{$legend_k} = 0;
+		}
+		
+		foreach ($servers as $row) {
+			echo $row['server_name'] . '<blockquote>';
+			
+			foreach ($ids as $id) {
+				echo $id . '<br /><br />';
+				
+				$url = $row['server_name'] . 'email/x1:stats.id:' . $id;
+				
+				$ch = curl_init($url);
+				//curl_setopt($ch, CURLOPT_URL, "example.com");
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+				$json = curl_exec($ch);
+				curl_close($ch);
+				
+				$str = json_decode($json);
+				
+				foreach  ($str as $str_k => $str_v) {
+					switch ($str_k) {
+						case 'openrate':
+							$str_v = number_format($str_v, 2);
+							break;
+					}
+					
+					$total_all->{$str_k} += $str_v;
+					
+					echo $legend[$str_k] . ': ' . $str_v . '<br />';
+				}
+				
+				echo '<br /><br />';
+			}
+			
+			echo '</blockquote>';
+		}
 
+		echo 'Total <blockquote>';
+		
+		unset($total_all->openrate);
+		$total_all->openrate = number_format((($total_all->viewed / $total_all->delivered) * 100), 2);
+		
+		foreach ($total_all as $total_k => $total_v) {
+			echo $legend[$total_k] . ': ' . $total_v . '<br />';
+		}
+		
+		echo '</blokquote>';
+		exit;
+	}
+	
 	public function encode() {
 		$v = $this->__(array('mode' => 'encode', 'encode' => ''));
 		extract($v);
