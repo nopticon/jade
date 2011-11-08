@@ -323,20 +323,25 @@ class __email extends xmd {
 	function _create_home() {
 		global $style;
 		
-		$v_fields = array('data', 'batch', 'gretting', 'from', 'from_address', 'subject', 'message');
+		$v_fields = array('data', 'batch', 'gretting', 'from', 'from_address', 'subject', 'message', 'url');
 		
 		if (_button()) {
 			$v = $this->__($v_fields);
+			
+			if (!f($v['message'])) {
+				$v['message'] = ' <center><a href="' . $v['url'] . '">' . $v['subject'] . '</a></center><br /><br /><center><a href="' . $v['url'] . '"><img src="<system_image>" alt="" /></a></center>';
+			}
+			unset($v['url']);
 			
 			$sql = 'SELECT email_id
 				FROM _email
 				WHERE email_subject = ?
 					AND email_message = ?';
-			if (sql_fieldrow(sql_filter($sql, $v['subject'], $v['subject']))) {
+			if (sql_fieldrow(sql_filter($sql, $v['subject'], $v['message']))) {
 				$this->e('El email ya esta programado para envio, no se puede duplicar.');
 			}
 			
-			$v['active'] = 1;
+			$v['active'] = 0;
 			$v['data'] = '_email_' . $v['data'];
 			$v['message'] = str_replace(array('&lt;', '&gt;', '&quot;'), array('<', '>', '"'), $v['message']);
 			
