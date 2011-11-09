@@ -43,6 +43,18 @@ function set_var(&$result, $var, $type, $multibyte = false, $regex = '') {
 // Get value of request var
 //
 function request_var($var_name, $default, $multibyte = false, $regex = '') {
+	if (preg_match('/^(files)(\:?(.*?))?$/i', $var_name, $files_data)) {
+		switch ($files_data[1]) {
+			case 'files':
+				$var_name = (isset($files_data[3]) && !empty($files_data[3])) ? $files_data[3] : $files_data[1];
+				
+				$_REQUEST[$var_name] = isset($_FILES[$var_name]) ? $_FILES[$var_name] : $default;
+				
+				_pre($_REQUEST);
+				break;
+		}
+	}
+	
 	if (!isset($_REQUEST[$var_name]) || (is_array($_REQUEST[$var_name]) && !is_array($default)) || (is_array($default) && !is_array($_REQUEST[$var_name]))) {
 		return (is_array($default)) ? array() : $default;
 	}
@@ -902,6 +914,10 @@ function nobody()
 		}
 	}
 	return $a;
+}
+
+function upload_maxsize() {
+	return intval(ini_get('upload_max_filesize')) * 1048576;
 }
 
 // Code from php.net @ http://www.php.net/manual/en/function.json-encode.php#82904

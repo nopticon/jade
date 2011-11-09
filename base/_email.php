@@ -32,7 +32,8 @@ class __email extends xmd {
 		'encode' => array(),
 		'image' => array(),
 		'stats' => array(),
-		'servers' => array()
+		'servers' => array(),
+		'distribute' => array()
 	);
 	
 	function home() {
@@ -632,6 +633,33 @@ class __email extends xmd {
 		
 		echo '</blokquote>';
 		exit;
+	}
+	
+	public function distribute() {
+		return $this->method();
+	}
+	
+	protected function _distribute_home() {
+		if ($this->submit) {
+			$sql = 'SELECT COUNT(server_id) AS total
+				FROM _servers';
+			$servers = sql_field($sql, 'total', 0);
+			
+			require_once(XFS . 'core/upload.php');
+			$upload = new upload();
+			
+			echo '<pre>';
+			var_dump(request_var('files:batch', w()));
+			echo '</pre>';
+			exit;
+			
+			$f = $upload->process('data/tmp/', request_var('files:batch', w()), w('jpg'), upload_maxsize());
+			
+			
+			_pre($servers, true);
+		}
+		
+		return;
 	}
 	
 	public function encode() {

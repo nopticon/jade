@@ -1,5 +1,6 @@
 <!-- INCLUDE page.header.htm -->
 
+<!-- IF MODE == 'create' -->
 <div id="mainframe">
 <form action="{_SELF}" method="post">
 	
@@ -52,5 +53,25 @@
 
 </form>
 </div>
+<!-- ELSEIF MODE == 'distribute' -->
+<div id="mainframe">
+<form action="{_SELF}" method="post">
+	
+	<div class="m_top_tiny field_area float-holder ie-widthfix">
+		<label for="batch">Enviar CSV</label>
+		<input type="file" class="w8" id="batch" name="batch" />
+	</div>
+	<div class="m_top_tiny field_area float-holder ie-widthfix">
+		<label for="table">Nombre de tabla</label>
+		<input type="text" class="w8" id="table" name="table" value="{FROM_ADDRESS}" />
+	</div>
+	
+	<div class="m_top_mid a_center">
+		<input type="submit" name="submit" value="Guardar cambios" />
+	</div>
+
+</form>
+</div>
+<!-- ENDIF -->
 
 <!-- INCLUDE page.footer.htm -->

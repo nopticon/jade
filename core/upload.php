@@ -20,9 +20,9 @@ if (!defined('XFS')) exit;
 
 class upload
 {
-	var $error = array();
+	public $error = array();
 	
-	function array_merge($files)
+	public function array_merge($files)
 	{
 		$file_ary = array();
 		if (!is_array($files)) return $file_ary;
@@ -51,12 +51,12 @@ class upload
 		return array_values($file_ary);
 	}
 	
-	function get_extension($file)
+	public function get_extension($file)
 	{
 		return strtolower(str_replace('.', '', substr($file, strrpos($file, '.'))));
 	}
 	
-	function rename($a, $b)
+	public function rename($a, $b)
 	{
 		$filename = str_replace($a['random_name'], $b, $a['filepath']);
 		@rename($a['filepath'], $filename);
@@ -65,7 +65,7 @@ class upload
 		return $filename;
 	}
 	
-	function _row($filepath, $filename)
+	public function _row($filepath, $filename)
 	{
 		$row = array(
 			'extension' => $this->get_extension($filename),
@@ -79,7 +79,7 @@ class upload
 		return $row;
 	}
 	
-	function process($filepath, $files, $extension, $filesize, $safe = true)
+	public function process($filepath, $files, $extension, $filesize, $safe = true)
 	{
 		global $user;
 		
@@ -157,7 +157,7 @@ class upload
 		return (count($files)) ? $files : false;
 	}
 	
-	function resize(&$row, $folder_a, $folder_b, $filename, $measure, $mscale = true, $watermark = true, $remove = false)
+	public function resize(&$row, $folder_a, $folder_b, $filename, $measure, $mscale = true, $watermark = true, $remove = false)
 	{
 		$a_filename = $filename . '.' . $row['extension'];
 		$source = $folder_a . $row['filename'];
@@ -240,7 +240,7 @@ class upload
 		return $row;
 	}
 	
-	function scale($mode, $a)
+	public function scale($mode, $a)
 	{
 		switch ($mode)
 		{
@@ -264,12 +264,12 @@ class upload
 		return array('width' => $width, 'height' => $height);
 	}
 	
-	function picnik_import()
+	public function picnik_import()
 	{
 		global $config;
 	}
 	
-	function picnik_export()
+	public function picnik_export()
 	{
 		global $config;
 	}
