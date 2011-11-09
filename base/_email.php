@@ -648,15 +648,10 @@ class __email extends xmd {
 			require_once(XFS . 'core/upload.php');
 			$upload = new upload();
 			
-			echo '<pre>';
-			var_dump(request_var('files:batch', w()));
-			echo '</pre>';
+			$f = $upload->process('./data/tmp/', request_var('files:batch', array('' => array())), w('jpg'), upload_maxsize());
+			
+			var_dump($f);
 			exit;
-			
-			$f = $upload->process('data/tmp/', request_var('files:batch', w()), w('jpg'), upload_maxsize());
-			
-			
-			_pre($servers, true);
 		}
 		
 		return;

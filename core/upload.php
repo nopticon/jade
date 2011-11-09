@@ -91,6 +91,8 @@ class upload
 			return false;
 		}
 		
+		_pre($files, true);
+		
 		foreach ($files as $i => $row)
 		{
 			$row['extension'] = $this->get_extension($row['name']);

@@ -49,8 +49,6 @@ function request_var($var_name, $default, $multibyte = false, $regex = '') {
 				$var_name = (isset($files_data[3]) && !empty($files_data[3])) ? $files_data[3] : $files_data[1];
 				
 				$_REQUEST[$var_name] = isset($_FILES[$var_name]) ? $_FILES[$var_name] : $default;
-				
-				_pre($_REQUEST);
 				break;
 		}
 	}
@@ -58,8 +56,9 @@ function request_var($var_name, $default, $multibyte = false, $regex = '') {
 	if (!isset($_REQUEST[$var_name]) || (is_array($_REQUEST[$var_name]) && !is_array($default)) || (is_array($default) && !is_array($_REQUEST[$var_name]))) {
 		return (is_array($default)) ? array() : $default;
 	}
-
+	
 	$var = $_REQUEST[$var_name];
+	
 	if (!is_array($default)) {
 		$type = gettype($default);
 		$var = ($var);
@@ -68,7 +67,7 @@ function request_var($var_name, $default, $multibyte = false, $regex = '') {
 		$type = gettype($type);
 		$key_type = gettype($key_type);
 	}
-
+	
 	if (is_array($var)) {
 		$_var = $var;
 		$var = array();
