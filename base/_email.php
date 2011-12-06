@@ -43,7 +43,8 @@ class __email extends xmd {
 		$sql = 'SELECT *
 			FROM _email
 			WHERE email_active = 1
-				AND email_schedule > ?
+				AND (email_schedule > ??
+				OR email_schedule = 0)
 			ORDER BY email_priority, email_id
 			LIMIT 1';
 		if (!$email = sql_fieldrow(sql_filter($sql, time()))) {
@@ -388,6 +389,10 @@ class __email extends xmd {
 		foreach ($v_fields as $field => $void) {
 			$sv[strtoupper($field)] = '';
 		}
+		
+		$sql = 'SELECT MAX(email_id) AS max_email
+			FROM _email';
+		$sv['MAX'] = sql_field($sql, 'max_email', 0) + 1;
 		
 		$this->as_vars($sv);
 	}
