@@ -33,7 +33,8 @@ class __email extends xmd {
 		'image' => array(),
 		'stats' => array(),
 		'servers' => array(),
-		'distribute' => array()
+		'distribute' => array(),
+		'cdate' => array()
 	);
 	
 	function home() {
@@ -42,17 +43,14 @@ class __email extends xmd {
 		$sql = 'SELECT *
 			FROM _email
 			WHERE email_active = 1
+				AND email_schedule > ?
 			ORDER BY email_priority, email_id
 			LIMIT 1';
-		if (!$email = sql_fieldrow($sql)) {
+		if (!$email = sql_fieldrow(sql_filter($sql, time()))) {
 			$this->e('No queue.');
 		}
 		
 		set_time_limit(0);
-		
-		if (!$email['email_batch']) {
-			$email['email_batch'] = 50;
-		}
 		
 		$sql = 'SELECT *
 			FROM ??
@@ -95,7 +93,7 @@ class __email extends xmd {
 			
 			$name_compose = '';
 			
-			if (isset($row['address_name'])) {
+			if (isset($row['address_name']) && !empty($row['address_name'])) {
 				$row['address_name'] = preg_replace('/\s\s+/', ' ', $row['address_name']);
 				$name_compose = ucwords(strtolower(trim($row['address_name'])));
 				
@@ -324,7 +322,7 @@ class __email extends xmd {
 	function _create_home() {
 		global $style;
 		
-		$v_fields = array('data', 'batch', 'gretting', 'from', 'from_address', 'subject', 'message', 'url');
+		$v_fields = array('data', 'batch', 'gretting', 'from', 'from_address', 'subject', 'message', 'url', 'schedule' => array('' => 0));
 		
 		if (_button()) {
 			$v = $this->__($v_fields);
@@ -334,6 +332,10 @@ class __email extends xmd {
 			}
 			unset($v['url']);
 			
+			if (empty($v['subject']) || empty($v['from']) || empty($v['from_address'])) {
+				_pre('No se program&oacute; el correo por falta de datos.', true);
+			}
+			
 			$sql = 'SELECT email_id
 				FROM _email
 				WHERE email_subject = ?
@@ -342,9 +344,17 @@ class __email extends xmd {
 				$this->e('El email ya esta programado para envio, no se puede duplicar.');
 			}
 			
-			$v['active'] = 0;
+			$v['active'] = 1;
 			$v['data'] = '_email_' . $v['data'];
 			$v['message'] = str_replace(array('&lt;', '&gt;', '&quot;'), array('<', '>', '"'), $v['message']);
+			$v['batch'] = (!empty($v['batch'])) ? $v['batch'] : 50;
+			$v['gretting'] = (!empty($v['gretting'])) ? $v['gretting'] : 'Buen d&iacute;a';
+			
+			if ($v['schedule']['month'] && $v['schedule']['day'] && $v['schedule']['year']) {
+				$v['schedule'] = mktime($v['schedule']['hour'], $v['schedule']['minute'], 0, $v['schedule']['month'], $v['schedule']['day'], $v['schedule']['year']);
+			} else {
+				$v['schedule'] = 0;
+			}
 			
 			$sql = 'INSERT INTO _email' . sql_build('INSERT', prefix('email', $v));
 			sql_query($sql);
@@ -372,8 +382,10 @@ class __email extends xmd {
 			}
 		}
 		
+		$v_fields = $this->__($v_fields);
+		
 		$sv = array();
-		foreach ($v_fields as $field) {
+		foreach ($v_fields as $field => $void) {
 			$sv[strtoupper($field)] = '';
 		}
 		
@@ -730,6 +742,14 @@ class __email extends xmd {
 		
 		echo $system_image_link;
 		exit;
+	}
+	
+	public function cdate() {
+		return $this->method();
+	}
+	
+	protected function _cdate_home() {
+		return _pre(date('j F Y H:i:s', time()), true);
 	}
 }
 

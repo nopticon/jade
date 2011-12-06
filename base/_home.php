@@ -22,8 +22,6 @@ class __home extends xmd {
 	var $methods = array();
 	
 	function home() {
-		global $user, $style;
-		
 		return;
 	}
 }
